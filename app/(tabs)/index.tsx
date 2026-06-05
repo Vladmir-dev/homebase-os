@@ -23,7 +23,7 @@ export default function HomeScreen() {
   const handleCategoryPress = (category: ServiceCategory) => {
     // Expo router safe parameter handling. This pushes to a deep page we'll build next.
     router.push({
-      pathname: '/category/[categoryId]',
+      pathname: '/category/[categoryId]' as any,
       params: { categoryId: category.id }
     });
   };
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     padding: 16,
     alignItems: 'center',
-    justifyContent: 'between'
+    justifyContent: 'space-between'
   },
   promoTextContainer: { flex: 1, justifyContent: 'center' },
   promoTag: { 
