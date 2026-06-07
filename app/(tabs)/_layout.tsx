@@ -10,13 +10,13 @@ export default function TabLayout() {
       <Stack screenOptions={{ headerShown: false }} />
       <View style={styles.bottomTabContainer}>
         <TouchableOpacity style={styles.tabNode} onPress={() => router.replace('/')}>
-          <View style={[styles.tabIconCircle, styles.activeTabCircle]}><Text style={styles.tabIconText}>UC</Text></View>
-          <Text style={[styles.tabLabel, styles.activeTabLabel]}>UC</Text>
+          <Ionicons name="home-outline" size={22} color="#757575" />
+          <Text style={[styles.tabLabel, styles.activeTabLabel]}>Home</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.tabNode}>
-          <Ionicons name="grid-outline" size={22} color="#757575" />
-          <Text style={styles.tabLabel}>Revamp</Text>
-        </TouchableOpacity> */}
+        <TouchableOpacity style={styles.tabNode}>
+          <Ionicons name="cart-outline" size={22} color="#757575" />
+          <Text style={styles.tabLabel}>Cart</Text>
+        </TouchableOpacity>
         {/* <TouchableOpacity style={styles.tabNode}>
           <Ionicons name="basket-outline" size={22} color="#757575" />
           <Text style={styles.tabLabel}>Native</Text>

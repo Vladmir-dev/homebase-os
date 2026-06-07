@@ -1,5 +1,128 @@
 import { ServiceCategory, ServiceSubCategory, ServiceItem } from '../types';
 
+export interface RecommendedItem {
+  id: string;
+  image: string;
+  title: string;
+  rating: string;
+  discount?: string;
+  price: string;
+}
+
+export const MOCK_RECOMMENDED: { title: string; items: RecommendedItem[] }[] = [
+  {
+    title: 'Massage for Men',
+    items: [
+      {
+        id: 'rec-massage-1',
+        image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?q=80&w=300',
+        title: 'Quick Comfort Therapy',
+        rating: '4.82',
+        discount: '17% OFF',
+        price: 'UGX   999',
+      },
+      {
+        id: 'rec-massage-2',
+        image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=300',
+        title: 'Swedish Full Body Massage',
+        rating: '4.90',
+        discount: '25% OFF',
+        price: 'UGX  699',
+      },
+      {
+        id: 'rec-massage-3',
+        image: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=300',
+        title: 'Deep Tissue Massage',
+        rating: '4.85',
+        discount: '20% OFF',
+        price: 'UGX  899',
+      },
+      {
+        id: 'rec-massage-4',
+        image: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?q=80&w=300',
+        title: 'Reflexology Foot Massage',
+        rating: '4.72',
+        discount: '15% OFF',
+        price: 'UGX  399',
+      },
+    ],
+  },
+  {
+    title: 'Popular Repairs',
+    items: [
+      {
+        id: 'rec-repair-1',
+        image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=300',
+        title: 'Switchboard Repair',
+        rating: '4.80',
+        discount: '10% OFF',
+        price: 'UGX  99',
+      },
+      {
+        id: 'rec-repair-2',
+        image: 'https://images.unsplash.com/photo-1585123334904-845d60e97b29?q=80&w=300',
+        title: 'Fan Installation',
+        rating: '4.78',
+        discount: '20% OFF',
+        price: 'UGX  149',
+      },
+      {
+        id: 'rec-repair-3',
+        image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?q=80&w=300',
+        title: 'Leaking Pipe Repair',
+        rating: '4.70',
+        discount: '15% OFF',
+        price: 'UGX  179',
+      },
+      {
+        id: 'rec-repair-4',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=300',
+        title: 'Inverter Installation',
+        rating: '4.83',
+        discount: '5% OFF',
+        price: 'UGX 499',
+      },
+    ],
+  },
+  {
+    title: 'Cleaning Services',
+    items: [
+      {
+        id: 'rec-clean-1',
+        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300',
+        title: '1 BHK Deep Cleaning',
+        rating: '4.70',
+        discount: '30% OFF',
+        price: 'UGX 1,499',
+      },
+      {
+        id: 'rec-clean-2',
+        image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=300',
+        title: 'Sofa Upholstery Cleaning',
+        rating: '4.65',
+        discount: '20% OFF',
+        price: 'UGX 599',
+      },
+      {
+        id: 'rec-clean-3',
+        image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=300',
+        title: 'Bathroom Scrub & Polish',
+        rating: '4.58',
+        discount: '15% OFF',
+        price: 'UGX 399',
+      },
+      {
+        id: 'rec-clean-4',
+        image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=300',
+        title: 'Kitchen Grease Cleaning',
+        rating: '4.62',
+        discount: '25% OFF',
+        price: 'UGX 499',
+      },
+    ],
+  },
+];
+
 export const MOCK_CATEGORIES: ServiceCategory[] = [
   {
     id: 'cat-elec',
