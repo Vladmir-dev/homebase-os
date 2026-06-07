@@ -1,70 +1,55 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const router = useRouter();
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-        }}
-      />
-    </Tabs>
+    <View style={styles.wrapper}>
+      <Stack screenOptions={{ headerShown: false }} />
+      <View style={styles.bottomTabContainer}>
+        <TouchableOpacity style={styles.tabNode} onPress={() => router.replace('/')}>
+          <View style={[styles.tabIconCircle, styles.activeTabCircle]}><Text style={styles.tabIconText}>UC</Text></View>
+          <Text style={[styles.tabLabel, styles.activeTabLabel]}>UC</Text>
+        </TouchableOpacity>
+        {/* <TouchableOpacity style={styles.tabNode}>
+          <Ionicons name="grid-outline" size={22} color="#757575" />
+          <Text style={styles.tabLabel}>Revamp</Text>
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity style={styles.tabNode}>
+          <Ionicons name="basket-outline" size={22} color="#757575" />
+          <Text style={styles.tabLabel}>Native</Text>
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity style={styles.tabNode}>
+          <Ionicons name="sparkles-outline" size={22} color="#757575" />
+          <Text style={styles.tabLabel}>Beauty</Text>
+        </TouchableOpacity> */}
+        <TouchableOpacity style={styles.tabNode}>
+          <Ionicons name="person-outline" size={22} color="#757575" />
+          <Text style={styles.tabLabel}>Account</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+  bottomTabContainer: {
+    flexDirection: 'row',
+    height: 64,
+    borderTopWidth: 1,
+    borderColor: '#f5f5f5',
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingBottom: 8,
+  },
+  tabNode: { alignItems: 'center', justifyContent: 'center' },
+  tabIconCircle: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  activeTabCircle: { backgroundColor: '#000', borderRadius: 6 },
+  tabIconText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  tabLabel: { fontSize: 11, color: '#757575', marginTop: 4, fontWeight: '500' },
+  activeTabLabel: { color: '#000', fontWeight: '700' },
+});

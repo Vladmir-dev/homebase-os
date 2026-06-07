@@ -7,170 +7,148 @@ import {
   TextInput, 
   TouchableOpacity, 
   Image, 
-  FlatList,
   Dimensions 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; // Built into Expo templates
+import { Ionicons } from '@expo/vector-icons';
 import { MOCK_CATEGORIES } from '../../utils/mockData';
-import { ServiceCategory } from '../../types';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  const handleCategoryPress = (category: ServiceCategory) => {
-    // Expo router safe parameter handling. This pushes to a deep page we'll build next.
-    router.push({
-      pathname: '/category/[categoryId]' as any,
-      params: { categoryId: category.id }
-    });
-  };
-
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* 1. Header Location & Search Selection */}
-      <View style={styles.headerContainer}>
-        <View style={styles.locationRow}>
-          <Ionicons name="location" size={18} color="#673ab7" />
-          <Text style={styles.locationText}>Home • Kampala, Central Region</Text>
-          <Ionicons name="chevron-down" size={16} color="#000" />
+    <View style={styles.masterWrapper}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Top Search Input Box */}
+        <View style={styles.searchHeader}>
+          <View style={styles.searchBox}>
+            <Ionicons name="search" size={18} color="#757575" style={{ marginRight: 8 }} />
+            <TextInput 
+              placeholder="Search for 'Fan'" 
+              placeholderTextColor="#757575"
+              style={styles.searchInput}
+            />
+          </View>
         </View>
 
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#777" style={styles.searchIcon} />
-          <TextInput 
-            placeholder="Search for services (e.g. Electrician)" 
-            placeholderTextColor="#888"
-            style={styles.searchInput}
-          />
+        {/* Dynamic Category Slotted Segment Grid */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeading}>What service do you need?</Text>
+          <View style={styles.gridContainer}>
+            {MOCK_CATEGORIES.map((category) => (
+              <TouchableOpacity 
+                key={category.id} 
+                style={styles.gridCard}
+                onPress={() => router.push({
+                  pathname: '/category/[categoryId]',
+                  params: { categoryId: category.id }
+                })}
+              >
+                <Image source={{ uri: category.bannerImage }} style={styles.gridImage} />
+                <Text style={styles.gridLabel}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
 
-      {/* 2. Promotional Offers Banner Slider */}
-      <ScrollView 
-        horizontal 
-        pagingEnabled 
-        showsHorizontalScrollIndicator={false}
-        style={styles.bannerSlider}
-      >
-        <View style={[styles.promoBanner, { backgroundColor: '#eedeff' }]}>
-          <View style={styles.promoTextContainer}>
-            <Text style={styles.promoTag}>17% OFF</Text>
-            <Text style={styles.promoTitle}>Premium Grooming for Men</Text>
-            <Text style={styles.promoSubtitle}>Top rated experts only</Text>
+        {/* Recommended Slider Section */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.rowHeader}>
+            <Text style={styles.sectionHeading}>Massage for Men</Text>
+            <TouchableOpacity><Text style={styles.seeAllText}>See all</Text></TouchableOpacity>
           </View>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?q=80&w=200' }} 
-            style={styles.promoImage} 
-          />
-        </View>
-        
-        <View style={[styles.promoBanner, { backgroundColor: '#dff6ff' }]}>
-          <View style={styles.promoTextContainer}>
-            <Text style={[styles.promoTag, { backgroundColor: '#0288d1' }]}>NEW</Text>
-            <Text style={styles.promoTitle}>Smart Home Inverter Setup</Text>
-            <Text style={styles.promoSubtitle}>Free inspection included</Text>
-          </View>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=200' }} 
-            style={styles.promoImage} 
-          />
+          
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+            <View style={styles.productSliderCard}>
+              <View style={styles.imageBadgeWrapper}>
+                <Image source={{ uri: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?q=80&w=300' }} style={styles.productSliderImage} />
+                <Text style={styles.discountTag}>17% OFF</Text>
+              </View>
+              <Text style={styles.productSliderTitle} numberOfLines={2}>Quick Comfort Therapy</Text>
+              <View style={styles.ratingInline}>
+                <Ionicons name="star" size={12} color="#444" />
+                <Text style={styles.ratingTextInline}>4.82</Text>
+              </View>
+              <Text style={styles.priceLine}>₹999 <Text style={styles.strikePrice}>₹1,199</Text></Text>
+            </View>
+          </ScrollView>
         </View>
       </ScrollView>
 
-      {/* 3. Main Services Category Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>What service do you need?</Text>
-        
-        <View style={styles.categoryGrid}>
-          {MOCK_CATEGORIES.map((category) => (
-            <TouchableOpacity 
-              key={category.id} 
-              style={styles.categoryCard}
-              onPress={() => handleCategoryPress(category)}
-              activeOpacity={0.7}
-            >
-              <Image source={{ uri: category.bannerImage }} style={styles.categoryImage} />
-              <View style={styles.categoryInfo}>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={12} color="#ffb300" />
-                  <Text style={styles.ratingText}>{category.rating}</Text>
-                  <Text style={styles.bookingCount}>• {category.totalBookings}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </ScrollView>
+      {/* Matching Platform Bottom Tab View Simulation */}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9f9f9' },
-  headerContainer: { paddingHorizontal: 16, paddingTop: 60, paddingBottom: 16, backgroundColor: '#fff' },
-  locationRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  locationText: { fontSize: 14, fontWeight: '600', marginHorizontal: 6, color: '#000' },
-  searchBar: { 
+  masterWrapper: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
+  searchHeader: { paddingHorizontal: 16, paddingTop: 55, paddingBottom: 12, backgroundColor: '#fff' },
+  searchBox: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: '#f1f1f5', 
+    backgroundColor: '#fff', 
     borderRadius: 8, 
     paddingHorizontal: 12, 
-    height: 46 
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2
   },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 15, color: '#000' },
+  searchInput: { flex: 1, fontSize: 15, color: '#000', fontWeight: '500' },
   
-  bannerSlider: { marginVertical: 16, paddingLeft: 16 },
-  promoBanner: { 
-    width: width - 48, 
-    height: 120, 
-    borderRadius: 12, 
-    marginRight: 16, 
-    flexDirection: 'row', 
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  promoTextContainer: { flex: 1, justifyContent: 'center' },
-  promoTag: { 
-    backgroundColor: '#673ab7', 
+  sectionContainer: { marginTop: 24, paddingHorizontal: 16 },
+  rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionHeading: { fontSize: 20, fontWeight: '700', color: '#000', marginBottom: 12 },
+  seeAllText: { color: '#673ab7', fontWeight: '700', fontSize: 14 },
+  
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  gridCard: { width: (width - 44) / 3, alignItems: 'center', marginBottom: 8 },
+  gridImage: { width: '100%', height: 95, borderRadius: 12, backgroundColor: '#f5f5f5' },
+  gridLabel: { fontSize: 13, fontWeight: '500', color: '#212121', marginTop: 6, textAlign: 'center' },
+
+  horizontalScroll: { paddingBottom: 16 },
+  productSliderCard: { width: 150, marginRight: 14 },
+  imageBadgeWrapper: { position: 'relative' },
+  productSliderImage: { width: 150, height: 150, borderRadius: 12, backgroundColor: '#f5f5f5' },
+  discountTag: { 
+    position: 'absolute', 
+    top: 8, 
+    left: 8, 
+    backgroundColor: '#00796b', 
     color: '#fff', 
     fontSize: 10, 
     fontWeight: '700', 
     paddingHorizontal: 6, 
     paddingVertical: 2, 
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-    marginBottom: 6
+    borderRadius: 4 
   },
-  promoTitle: { fontSize: 16, fontWeight: '700', color: '#111', marginBottom: 2 },
-  promoSubtitle: { fontSize: 12, color: '#555' },
-  promoImage: { width: 80, height: 80, borderRadius: 8 },
+  productSliderTitle: { fontSize: 14, fontWeight: '500', color: '#212121', marginTop: 8, lineHeight: 18 },
+  ratingInline: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  ratingTextInline: { fontSize: 12, color: '#616161', marginLeft: 4 },
+  priceLine: { fontSize: 14, fontWeight: '700', color: '#000', marginTop: 4 },
+  strikePrice: { fontSize: 12, fontWeight: '400', color: '#757575', textDecorationLine: 'line-through', marginLeft: 4 },
 
-  sectionContainer: { paddingHorizontal: 16, marginBottom: 32 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#000', marginBottom: 16 },
-  categoryGrid: { flexDirection: 'column', gap: 16 },
-  categoryCard: { 
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#eaeaea',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2
+  bottomTabContainer: { 
+    flexDirection: 'row', 
+    height: 64, 
+    borderTopWidth: 1, 
+    borderColor: '#f5f5f5', 
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingBottom: 8
   },
-  categoryImage: { width: '100%', height: 150, backgroundColor: '#eee' },
-  categoryInfo: { padding: 12 },
-  categoryName: { fontSize: 16, fontWeight: '600', color: '#000', marginBottom: 4 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center' },
-  ratingText: { fontSize: 12, fontWeight: '600', marginLeft: 4, marginRight: 6 },
-  bookingCount: { fontSize: 12, color: '#666' }
+  tabNode: { alignItems: 'center', justifyContent: 'center' },
+  tabIconCircle: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  activeTabCircle: { backgroundColor: '#000', borderRadius: 6 },
+  tabIconText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  tabLabel: { fontSize: 11, color: '#757575', marginTop: 4, fontWeight: '500' },
+  activeTabLabel: { color: '#000', fontWeight: '700' }
 });
