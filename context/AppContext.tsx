@@ -5,14 +5,19 @@ interface AppContextType {
   cart: CartItem[];
   addToCart: (service: ServiceItem) => void;
   removeFromCart: (serviceId: string) => void;
+  clearCart: () => void;
   cartTotal: number;
   cartCount: number;
+  login: (username: string, password: string) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const addToCart = (service: ServiceItem) => {
     setCart((prev) => {
@@ -37,8 +42,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const cartTotal = cart.reduce((sum, item) => sum + item.service.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  const clearCart = () => setCart([]);
+
+  const login = (username: string, password: string) => {
+    // Implement login logic here (e.g., API call)
+    console.log('Logging in with', username, password);
+    setIsAuthenticated(true); // Step 8: Sets isAuthenticated to true on successful login
+  };
+  
+  const logout = () => {
+    // Implement logout logic here (e.g., clear tokens, reset state)
+    console.log('Logging out');
+    setIsAuthenticated(false);
+  };
+
   return (
-    <AppContext.Provider value={{ cart, addToCart, removeFromCart, cartTotal, cartCount }}>
+    <AppContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, cartTotal, cartCount, login, logout, isAuthenticated }}>
       {children}
     </AppContext.Provider>
   );

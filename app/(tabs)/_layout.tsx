@@ -1,34 +1,45 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const TABS = [
+  { label: 'Home', icon: 'home-outline' as const, route: '/' },
+  { label: 'Cart', icon: 'cart-outline' as const, route: '/cart' },
+  { label: 'Account', icon: 'person-outline' as const, route: '/account' },
+];
 
 export default function TabLayout() {
   const router = useRouter();
+  const segments = useSegments();
+  const currentSegment = segments[segments.length - 1] || '(tabs)';
 
   return (
     <View style={styles.wrapper}>
       <Stack screenOptions={{ headerShown: false }} />
       <View style={styles.bottomTabContainer}>
-        <TouchableOpacity style={styles.tabNode} onPress={() => router.replace('/')}>
-          <Ionicons name="home-outline" size={22} color="#757575" />
-          <Text style={[styles.tabLabel, styles.activeTabLabel]}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabNode}>
-          <Ionicons name="cart-outline" size={22} color="#757575" />
-          <Text style={styles.tabLabel}>Cart</Text>
-        </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.tabNode}>
-          <Ionicons name="basket-outline" size={22} color="#757575" />
-          <Text style={styles.tabLabel}>Native</Text>
-        </TouchableOpacity> */}
-        {/* <TouchableOpacity style={styles.tabNode}>
-          <Ionicons name="sparkles-outline" size={22} color="#757575" />
-          <Text style={styles.tabLabel}>Beauty</Text>
-        </TouchableOpacity> */}
-        <TouchableOpacity style={styles.tabNode}>
-          <Ionicons name="person-outline" size={22} color="#757575" />
-          <Text style={styles.tabLabel}>Account</Text>
-        </TouchableOpacity>
+        {TABS.map((tab) => {
+          const active =
+            tab.route === '/'
+              ? currentSegment === '(tabs)'
+              : currentSegment === tab.route.slice(1);
+          return (
+            <TouchableOpacity
+              key={tab.label}
+              style={styles.tabNode}
+              onPress={() => router.replace(tab.route as any)}
+            >
+              <Ionicons name={tab.icon} size={22} color={active ? '#2e7d32' : '#757575'} />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  active && { color: '#2e7d32', fontWeight: '700' },
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -47,9 +58,10 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   tabNode: { alignItems: 'center', justifyContent: 'center' },
-  tabIconCircle: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
-  activeTabCircle: { backgroundColor: '#000', borderRadius: 6 },
-  tabIconText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  tabLabel: { fontSize: 11, color: '#757575', marginTop: 4, fontWeight: '500' },
-  activeTabLabel: { color: '#000', fontWeight: '700' },
+  tabLabel: {
+    fontSize: 11,
+    color: '#757575',
+    marginTop: 4,
+    fontWeight: '500',
+  },
 });
