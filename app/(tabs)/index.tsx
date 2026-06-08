@@ -86,6 +86,10 @@ export default function HomeScreen() {
                   rating={item.rating}
                   discount={item.discount}
                   price={item.price}
+                  onPress={() => router.push({
+                    pathname: '/category/[categoryId]',
+                    params: { categoryId: section.categoryId }
+                  })}
                 />
               ))}
             </ScrollView>

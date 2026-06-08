@@ -9,9 +9,10 @@ export interface RecommendedItem {
   price: string;
 }
 
-export const MOCK_RECOMMENDED: { title: string; items: RecommendedItem[] }[] = [
+export const MOCK_RECOMMENDED: { title: string; categoryId: string; items: RecommendedItem[] }[] = [
   {
     title: 'Massage for Men',
+    categoryId: 'cat-massage',
     items: [
       {
         id: 'rec-massage-1',
@@ -49,6 +50,7 @@ export const MOCK_RECOMMENDED: { title: string; items: RecommendedItem[] }[] = [
   },
   {
     title: 'Popular Repairs',
+    categoryId: 'cat-elec',
     items: [
       {
         id: 'rec-repair-1',
@@ -86,6 +88,7 @@ export const MOCK_RECOMMENDED: { title: string; items: RecommendedItem[] }[] = [
   },
   {
     title: 'Cleaning Services',
+    categoryId: 'cat-cleaning',
     items: [
       {
         id: 'rec-clean-1',
