@@ -103,7 +103,7 @@ export default function RootLayout() {
   );
 }
 
-const HIDE_CART_ROUTES = ['/checkout', '/cart', '/modal'];
+const HIDE_CART_ROUTES = ['/checkout', '/cart', '/modal', '/(auth)'];
 
 function CartBadge() {
   const { cartCount, cartTotal } = useApp();
