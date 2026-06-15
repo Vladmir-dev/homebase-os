@@ -59,85 +59,85 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Simulating loading user assets upon authenticated state mutation
   useEffect(() => {
-    const hydratePlatformData = async () => {
-      if (isAuthenticated) {
-        try {
-          // Attempt reading structural payloads from local storage first
-          const storedAssets = await AsyncStorage.getItem(STORAGE_KEY_ASSETS);
-          const storedActiveId = await AsyncStorage.getItem(
-            STORAGE_KEY_ACTIVE_ID,
-          );
+  const hydratePlatformData = async () => {
+    if (isAuthenticated) {
+      try {
+        // 1. Define your master fallback array up top
+        const defaultAssets: Asset[] = [
+          {
+            id: "asset-1",
+            name: "Kansanga Heights",
+            type: "HOUSEHOLD",
+            role: "OWNER",
+            scopes: ["*"],
+            balance: 1420000,
+          },
+          {
+            id: "asset-2",
+            name: "Ntinda Unit 2",
+            type: "RENTAL",
+            role: "TENANT",
+            scopes: ["read:lease", "create:maintenance_req", "write:rent_payment"],
+            balance: 0,
+          },
+          {
+            id: "asset-3",
+            name: "Mukono Site",
+            type: "CONSTRUCTION",
+            role: "OWNER",
+            scopes: ["read:site_data", "write:milestone", "approve:payment"],
+            balance: 8500000,
+          },
+          {
+            id: "asset-4",
+            name: "Bukoto Commercial Complex",
+            type: "RENTAL",
+            role: "OWNER",
+            scopes: ["*", "read:portfolio", "write:legal_notice", "trigger:momo_push"],
+            balance: 18800000,
+          },
+        ];
 
-          if (storedAssets) {
-            const parsed = JSON.parse(storedAssets);
+        const storedAssets = await AsyncStorage.getItem(STORAGE_KEY_ASSETS);
+        const storedActiveId = await AsyncStorage.getItem(STORAGE_KEY_ACTIVE_ID);
+
+        if (storedAssets) {
+          const parsed = JSON.parse(storedAssets) as Asset[];
+          
+          // Check if your hardcoded array length differs from disk storage length
+          if (parsed.length !== defaultAssets.length) {
+            // Update state with code adjustments and re-sync disk matching new schema blueprint
+            setAssets(defaultAssets);
+            setActiveAsset(defaultAssets.find(a => a.id === storedActiveId) || defaultAssets[0]);
+            await AsyncStorage.setItem(STORAGE_KEY_ASSETS, JSON.stringify(defaultAssets));
+          } else {
+            // Data matches structurally -> use stored cache data cleanly
             setAssets(parsed);
             if (storedActiveId) {
-              setActiveAsset(
-                parsed.find((a: Asset) => a.id === storedActiveId) || parsed[0],
-              );
+              setActiveAsset(parsed.find((a: Asset) => a.id === storedActiveId) || parsed[0]);
             } else {
               setActiveAsset(parsed[0]);
             }
-          } else {
-            // Fallback Default data load if first launch setup configuration parameters are blank
-            const fallbackAssets: Asset[] = [
-              {
-                id: "asset-1",
-                name: "Kansanga Heights",
-                type: "HOUSEHOLD",
-                role: "OWNER",
-                scopes: ["*"],
-                balance: 1420000,
-              },
-              {
-                id: "asset-2",
-                name: "Ntinda Unit 2",
-                type: "RENTAL",
-                role: "TENANT",
-                scopes: [
-                  "read:lease",
-                  "create:maintenance_req",
-                  "write:rent_payment",
-                ],
-                balance: 0,
-              },
-              {
-                id: "asset-3",
-                name: "Mukono Site",
-                type: "CONSTRUCTION",
-                role: "OWNER",
-                scopes: [
-                  "read:site_data",
-                  "write:milestone",
-                  "approve:payment",
-                ],
-                balance: 8500000,
-              },
-            ];
-            setAssets(fallbackAssets);
-            setActiveAsset(fallbackAssets[0]);
-
-            // Flash write payloads directly to disk storage layers asynchronously
-            await AsyncStorage.setItem(
-              STORAGE_KEY_ASSETS,
-              JSON.stringify(fallbackAssets),
-            );
-            await AsyncStorage.setItem(
-              STORAGE_KEY_ACTIVE_ID,
-              fallbackAssets[0].id,
-            );
           }
-        } catch (error) {
-          console.error("Failed reading data from storage engines:", error);
-        }
-      } else {
-        setAssets([]);
-        setActiveAsset(null);
-      }
-    };
+        } else {
+          // Fallback Default data load if disk storage is entirely blank
+          setAssets(defaultAssets);
+          setActiveAsset(defaultAssets[0]);
 
-    hydratePlatformData();
-  }, [isAuthenticated]);
+          await AsyncStorage.setItem(STORAGE_KEY_ASSETS, JSON.stringify(defaultAssets));
+          await AsyncStorage.setItem(STORAGE_KEY_ACTIVE_ID, defaultAssets[0].id);
+        }
+      } catch (error) {
+        console.error("Failed reading data from storage engines:", error);
+      }
+    } else {
+      setAssets([]);
+      setActiveAsset(null);
+    }
+  };
+
+  hydratePlatformData();
+}, [isAuthenticated]);
 
   // Existing implementation methods
   const addToCart = (service: ServiceItem) => {
