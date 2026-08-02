@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { ServiceItem, CartItem } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../services/api";
+import { CartItem, ServiceItem } from "../types";
 
 // 1. Define strict domain types for the multi-tenant architecture
 export type AssetType = "HOUSEHOLD" | "RENTAL" | "CONSTRUCTION" | "ESTATE";
@@ -42,10 +42,18 @@ interface AppContextType {
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
-  
+
   // Auth API state & actions
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, password: string, firstName: string, lastName?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  register: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName?: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   userProfile: UserProfile | null;
@@ -55,12 +63,24 @@ interface AppContextType {
   assets: Asset[];
   setActiveAssetById: (assetId: string) => void;
   refreshAssets: () => Promise<void>;
+  createAsset: (
+    name: string,
+    assetType: string,
+    location?: string,
+  ) => Promise<any>;
   isOffline: boolean;
   hasScope: (requiredScope: string) => boolean;
 
   // Backend Quick Action Helpers
-  createMaintenanceRequest: (title: string, description: string, priority?: 'low' | 'medium' | 'high' | 'emergency') => Promise<any>;
-  createBookingOrder: (service: ServiceItem, description?: string) => Promise<any>;
+  createMaintenanceRequest: (
+    title: string,
+    description: string,
+    priority?: "low" | "medium" | "high" | "emergency",
+  ) => Promise<any>;
+  createBookingOrder: (
+    service: ServiceItem,
+    description?: string,
+  ) => Promise<any>;
   processCheckoutPayment: (phone: string, method?: string) => Promise<any>;
 }
 
@@ -121,28 +141,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (Array.isArray(rawAssets) && rawAssets.length > 0) {
         const mappedAssets: Asset[] = rawAssets.map((raw: any) => {
-          let assetType: AssetType = 'HOUSEHOLD';
-          if (raw.asset_type === 'rental_unit') assetType = 'RENTAL';
-          else if (raw.asset_type === 'construction_site') assetType = 'CONSTRUCTION';
-          else if (raw.asset_type === 'estate') assetType = 'ESTATE';
+          let assetType: AssetType = "HOUSEHOLD";
+          if (raw.asset_type === "rental_unit") assetType = "RENTAL";
+          else if (raw.asset_type === "construction_site")
+            assetType = "CONSTRUCTION";
+          else if (raw.asset_type === "estate") assetType = "ESTATE";
 
           return {
             id: `asset-${raw.id}`,
             backendId: raw.id,
             name: raw.name,
             type: assetType,
-            role: raw.owner === userProfile?.id ? 'OWNER' : 'TENANT',
-            scopes: ['*'],
-            balance: raw.asset_type === 'construction_site' ? 8500000 : raw.asset_type === 'estate' ? 18800000 : raw.asset_type === 'rental_unit' ? 800000 : 1420000,
-            location: raw.location || '',
+            role: raw.owner === userProfile?.id ? "OWNER" : "TENANT",
+            scopes: ["*"],
+            balance:
+              raw.asset_type === "construction_site"
+                ? 8500000
+                : raw.asset_type === "estate"
+                  ? 18800000
+                  : raw.asset_type === "rental_unit"
+                    ? 800000
+                    : 1420000,
+            location: raw.location || "",
           };
         });
 
         setAssets(mappedAssets);
-        await AsyncStorage.setItem(STORAGE_KEY_ASSETS, JSON.stringify(mappedAssets));
+        await AsyncStorage.setItem(
+          STORAGE_KEY_ASSETS,
+          JSON.stringify(mappedAssets),
+        );
 
-        const storedActiveId = await AsyncStorage.getItem(STORAGE_KEY_ACTIVE_ID);
-        const match = mappedAssets.find(a => a.id === storedActiveId) || mappedAssets[0];
+        const storedActiveId = await AsyncStorage.getItem(
+          STORAGE_KEY_ACTIVE_ID,
+        );
+        const match =
+          mappedAssets.find((a) => a.id === storedActiveId) || mappedAssets[0];
         setActiveAsset(match);
         await AsyncStorage.setItem(STORAGE_KEY_ACTIVE_ID, match.id);
         return;
@@ -214,7 +248,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const register = async (email: string, password: string, firstName: string, lastName: string = '') => {
+  const register = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string = "",
+  ) => {
     try {
       await api.register(email, password, firstName, lastName);
       await api.clearTokens();
@@ -234,6 +273,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     setUserProfile(null);
     await clearAssetSession();
     clearCart();
+  };
+
+  const createAsset = async (
+    name: string,
+    assetType: string,
+    location?: string,
+  ) => {
+    const payload = { name, asset_type: assetType, location };
+    const result = await api.createAsset(payload);
+    await fetchAssetsFromBackend();
+    return result;
   };
 
   const setActiveAssetById = async (assetId: string) => {
@@ -259,7 +309,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const createMaintenanceRequest = async (
     title: string,
     description: string,
-    priority: 'low' | 'medium' | 'high' | 'emergency' = 'medium'
+    priority: "low" | "medium" | "high" | "emergency" = "medium",
   ) => {
     if (!activeAsset?.backendId) throw new Error("No active asset selected");
     return api.createMaintenanceRequest({
@@ -270,21 +320,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const createBookingOrder = async (service: ServiceItem, description?: string) => {
+  const createBookingOrder = async (
+    service: ServiceItem,
+    description?: string,
+  ) => {
     return api.createBooking({
       price: service.price,
-      description: description || service.descriptionPoints?.join(', ') || service.name,
+      description:
+        description || service.descriptionPoints?.join(", ") || service.name,
       asset_id: activeAsset?.backendId,
     });
   };
 
-  const processCheckoutPayment = async (phone: string, method: string = 'mobile_money') => {
+  const processCheckoutPayment = async (
+    phone: string,
+    method: string = "mobile_money",
+  ) => {
     const serviceFee = Math.round(cartTotal * 0.05);
     const grandTotal = cartTotal + serviceFee;
 
     const paymentRes = await api.initializePayment({
       amount: grandTotal,
-      currency: 'UGX',
+      currency: "UGX",
       payment_method: method,
       phone_number: phone,
       description: `Homebase OS Cart Purchase (${cartCount} items)`,
@@ -312,6 +369,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         assets,
         setActiveAssetById,
         refreshAssets: fetchAssetsFromBackend,
+        createAsset,
         isOffline,
         hasScope,
         createMaintenanceRequest,
