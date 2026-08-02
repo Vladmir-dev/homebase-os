@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ServiceItem, CartItem } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../services/api";
 
 // 1. Define strict domain types for the multi-tenant architecture
 export type AssetType = "HOUSEHOLD" | "RENTAL" | "CONSTRUCTION" | "ESTATE";
@@ -14,11 +15,23 @@ export type UserRole =
 
 export interface Asset {
   id: string;
+  backendId?: number;
   name: string;
   type: AssetType;
   role: UserRole;
   scopes: string[]; // RBAC array (e.g., ['read:ledger', 'write:milestone'])
   balance: number;
+  location?: string;
+}
+
+export interface UserProfile {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number?: string;
+  reliability_score?: number;
+  is_verified?: boolean;
 }
 
 interface AppContextType {
@@ -29,16 +42,26 @@ interface AppContextType {
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
-  login: (username: string, password: string) => void;
+  
+  // Auth API state & actions
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string, firstName: string, lastName?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  userProfile: UserProfile | null;
 
-  // NEW: Multi-Tenant Architecture additions
+  // Multi-Tenant Architecture & Data
   activeAsset: Asset | null;
   assets: Asset[];
   setActiveAssetById: (assetId: string) => void;
+  refreshAssets: () => Promise<void>;
   isOffline: boolean;
   hasScope: (requiredScope: string) => boolean;
+
+  // Backend Quick Action Helpers
+  createMaintenanceRequest: (title: string, description: string, priority?: 'low' | 'medium' | 'high' | 'emergency') => Promise<any>;
+  createBookingOrder: (service: ServiceItem, description?: string) => Promise<any>;
+  processCheckoutPayment: (phone: string, method?: string) => Promise<any>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,100 +69,103 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Existing states
+  // States
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // NEW: Architecture States
+  // Architecture States
   const [assets, setAssets] = useState<Asset[]>([]);
   const [activeAsset, setActiveAsset] = useState<Asset | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+
   const STORAGE_KEY_ASSETS = "@homebase_os:cached_assets";
   const STORAGE_KEY_ACTIVE_ID = "@homebase_os:active_asset_id";
 
-  // Simulating loading user assets upon authenticated state mutation
+  const clearAssetSession = async () => {
+    setAssets([]);
+    setActiveAsset(null);
+    await AsyncStorage.removeItem(STORAGE_KEY_ASSETS);
+    await AsyncStorage.removeItem(STORAGE_KEY_ACTIVE_ID);
+  };
+
+  // Check stored auth session on app startup
   useEffect(() => {
-  const hydratePlatformData = async () => {
-    if (isAuthenticated) {
-      try {
-        // 1. Define your master fallback array up top
-        const defaultAssets: Asset[] = [
-          {
-            id: "asset-1",
-            name: "Kansanga Heights",
-            type: "HOUSEHOLD",
-            role: "OWNER",
-            scopes: ["*"],
-            balance: 1420000,
-          },
-          {
-            id: "asset-2",
-            name: "Ntinda Unit 2",
-            type: "RENTAL",
-            role: "TENANT",
-            scopes: ["read:lease", "create:maintenance_req", "write:rent_payment"],
-            balance: 0,
-          },
-          {
-            id: "asset-3",
-            name: "Mukono Site",
-            type: "CONSTRUCTION",
-            role: "OWNER",
-            scopes: ["read:site_data", "write:milestone", "approve:payment"],
-            balance: 8500000,
-          },
-          {
-            id: "asset-4",
-            name: "Bukoto Commercial Complex",
-            type: "RENTAL",
-            role: "OWNER",
-            scopes: ["*", "read:portfolio", "write:legal_notice", "trigger:momo_push"],
-            balance: 18800000,
-          },
-        ];
-
-        const storedAssets = await AsyncStorage.getItem(STORAGE_KEY_ASSETS);
-        const storedActiveId = await AsyncStorage.getItem(STORAGE_KEY_ACTIVE_ID);
-
-        if (storedAssets) {
-          const parsed = JSON.parse(storedAssets) as Asset[];
-          
-          // Check if your hardcoded array length differs from disk storage length
-          if (parsed.length !== defaultAssets.length) {
-            // Update state with code adjustments and re-sync disk matching new schema blueprint
-            setAssets(defaultAssets);
-            setActiveAsset(defaultAssets.find(a => a.id === storedActiveId) || defaultAssets[0]);
-            await AsyncStorage.setItem(STORAGE_KEY_ASSETS, JSON.stringify(defaultAssets));
-          } else {
-            // Data matches structurally -> use stored cache data cleanly
-            setAssets(parsed);
-            if (storedActiveId) {
-              setActiveAsset(parsed.find((a: Asset) => a.id === storedActiveId) || parsed[0]);
-            } else {
-              setActiveAsset(parsed[0]);
-            }
-          }
-        } else {
-          // Fallback Default data load if disk storage is entirely blank
-          setAssets(defaultAssets);
-          setActiveAsset(defaultAssets[0]);
-
-          await AsyncStorage.setItem(STORAGE_KEY_ASSETS, JSON.stringify(defaultAssets));
-          await AsyncStorage.setItem(STORAGE_KEY_ACTIVE_ID, defaultAssets[0].id);
+    const checkAuthStatus = async () => {
+      await api.init();
+      const token = api.getAccessToken();
+      if (token) {
+        try {
+          const profile = await api.getProfile();
+          setUserProfile(profile);
+          setIsAuthenticated(true);
+        } catch (e) {
+          console.warn("Stored auth token validation failed:", e);
+          setIsAuthenticated(false);
         }
-      } catch (error) {
-        console.error("Failed reading data from storage engines:", error);
       }
-    } else {
+    };
+    checkAuthStatus();
+  }, []);
+
+  // Fetch real platform assets whenever authenticated state changes
+  const fetchAssetsFromBackend = async () => {
+    if (!isAuthenticated) {
+      await clearAssetSession();
+      return;
+    }
+
+    try {
+      const rawAssets = await api.getAssets();
+      setIsOffline(false);
+
+      if (Array.isArray(rawAssets) && rawAssets.length > 0) {
+        const mappedAssets: Asset[] = rawAssets.map((raw: any) => {
+          let assetType: AssetType = 'HOUSEHOLD';
+          if (raw.asset_type === 'rental_unit') assetType = 'RENTAL';
+          else if (raw.asset_type === 'construction_site') assetType = 'CONSTRUCTION';
+          else if (raw.asset_type === 'estate') assetType = 'ESTATE';
+
+          return {
+            id: `asset-${raw.id}`,
+            backendId: raw.id,
+            name: raw.name,
+            type: assetType,
+            role: raw.owner === userProfile?.id ? 'OWNER' : 'TENANT',
+            scopes: ['*'],
+            balance: raw.asset_type === 'construction_site' ? 8500000 : raw.asset_type === 'estate' ? 18800000 : raw.asset_type === 'rental_unit' ? 800000 : 1420000,
+            location: raw.location || '',
+          };
+        });
+
+        setAssets(mappedAssets);
+        await AsyncStorage.setItem(STORAGE_KEY_ASSETS, JSON.stringify(mappedAssets));
+
+        const storedActiveId = await AsyncStorage.getItem(STORAGE_KEY_ACTIVE_ID);
+        const match = mappedAssets.find(a => a.id === storedActiveId) || mappedAssets[0];
+        setActiveAsset(match);
+        await AsyncStorage.setItem(STORAGE_KEY_ACTIVE_ID, match.id);
+        return;
+      }
+
+      if (Array.isArray(rawAssets)) {
+        await clearAssetSession();
+        return;
+      }
+    } catch (error) {
+      console.warn("Backend assets fetch failed:", error);
+      setIsOffline(true);
       setAssets([]);
       setActiveAsset(null);
+      return;
     }
   };
 
-  hydratePlatformData();
-}, [isAuthenticated]);
+  useEffect(() => {
+    fetchAssetsFromBackend();
+  }, [isAuthenticated]);
 
-  // Existing implementation methods
+  // Cart operations
   const addToCart = (service: ServiceItem) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.service.id === service.id);
@@ -173,38 +199,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const login = (username: string, password: string) => {
-    console.log("Logging in with", username, password);
-    setIsAuthenticated(true);
+  // Real Auth Actions
+  const login = async (email: string, password: string) => {
+    try {
+      const data = await api.login(email, password);
+      if (data.user) {
+        setUserProfile(data.user);
+      }
+      setIsAuthenticated(true);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      return { success: false, error: error.message || "Invalid credentials" };
+    }
   };
 
-  const logout = () => {
-    console.log("Logging out");
+  const register = async (email: string, password: string, firstName: string, lastName: string = '') => {
+    try {
+      await api.register(email, password, firstName, lastName);
+      await api.clearTokens();
+      await clearAssetSession();
+      setUserProfile(null);
+      setIsAuthenticated(false);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Registration failed:", error);
+      return { success: false, error: error.message || "Registration failed" };
+    }
+  };
+
+  const logout = async () => {
+    await api.logout();
     setIsAuthenticated(false);
+    setUserProfile(null);
+    await clearAssetSession();
     clearCart();
   };
 
-  // NEW: Architecture Mutation Methods
   const setActiveAssetById = async (assetId: string) => {
     const target = assets.find((a) => a.id === assetId);
     if (target) {
       setActiveAsset(target);
-      clearCart(); // Clear contextual cart when switching properties to prevent data leak leaks
+      clearCart();
       try {
         await AsyncStorage.setItem(STORAGE_KEY_ACTIVE_ID, assetId);
       } catch (e) {
-        console.warn(
-          "Failed tracking active application scope mutation preference persistent keys:",
-          e,
-        );
+        console.warn("Failed tracking active asset ID:", e);
       }
     }
   };
 
   const hasScope = (requiredScope: string): boolean => {
     if (!activeAsset) return false;
-    if (activeAsset.scopes.includes("*")) return true; // Owner wildcard access bypass
+    if (activeAsset.scopes.includes("*")) return true;
     return activeAsset.scopes.includes(requiredScope);
+  };
+
+  // Helper actions
+  const createMaintenanceRequest = async (
+    title: string,
+    description: string,
+    priority: 'low' | 'medium' | 'high' | 'emergency' = 'medium'
+  ) => {
+    if (!activeAsset?.backendId) throw new Error("No active asset selected");
+    return api.createMaintenanceRequest({
+      asset_id: activeAsset.backendId,
+      title,
+      description,
+      priority,
+    });
+  };
+
+  const createBookingOrder = async (service: ServiceItem, description?: string) => {
+    return api.createBooking({
+      price: service.price,
+      description: description || service.descriptionPoints?.join(', ') || service.name,
+      asset_id: activeAsset?.backendId,
+    });
+  };
+
+  const processCheckoutPayment = async (phone: string, method: string = 'mobile_money') => {
+    const serviceFee = Math.round(cartTotal * 0.05);
+    const grandTotal = cartTotal + serviceFee;
+
+    const paymentRes = await api.initializePayment({
+      amount: grandTotal,
+      currency: 'UGX',
+      payment_method: method,
+      phone_number: phone,
+      description: `Homebase OS Cart Purchase (${cartCount} items)`,
+      asset_id: activeAsset?.backendId,
+    });
+
+    return paymentRes;
   };
 
   return (
@@ -217,14 +304,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         cartTotal,
         cartCount,
         login,
+        register,
         logout,
         isAuthenticated,
-        // New Exposures
+        userProfile,
         activeAsset,
         assets,
         setActiveAssetById,
+        refreshAssets: fetchAssetsFromBackend,
         isOffline,
         hasScope,
+        createMaintenanceRequest,
+        createBookingOrder,
+        processCheckoutPayment,
       }}
     >
       {children}

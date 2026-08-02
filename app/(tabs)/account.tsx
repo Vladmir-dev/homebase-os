@@ -1,30 +1,39 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 
 import { useApp } from '../../context/AppContext';
-
-const ACCOUNT_MENU = [
-  { icon: 'receipt-outline' as const, label: 'My Orders', badge: '3' },
-  { icon: 'heart-outline' as const, label: 'Favourites' },
-  { icon: 'location-outline' as const, label: 'Saved Addresses' },
-  { icon: 'card-outline' as const, label: 'Payment Methods' },
-  { icon: 'notifications-outline' as const, label: 'Notifications' },
-  { icon: 'settings-outline' as const, label: 'Settings' },
-  { icon: 'help-circle-outline' as const, label: 'Help & Support' },
-];
+import { api } from '../../services/api';
 
 export default function AccountScreen() {
-  const { logout } = useApp();
+  const { logout, userProfile, assets } = useApp();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const handleLogout = () => {
-    setShowLogoutModal(false);
-    logout();
-    router.replace('/(auth)'); // Redirect to login screen after logout
-  }
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await api.getUnreadCount();
+        if (res.unread_count !== undefined) setUnreadCount(res.unread_count);
+      } catch (e) {
+        console.warn('Failed fetching unread count:', e);
+      }
+    };
+    fetchUnread();
+  }, []);
+
+  const ACCOUNT_MENU = [
+    { icon: 'business-outline' as const, label: 'My Registered Assets', badge: `${assets.length}` },
+    { icon: 'notifications-outline' as const, label: 'Notifications', badge: unreadCount > 0 ? `${unreadCount}` : undefined },
+    { icon: 'shield-checkmark-outline' as const, label: 'NIRA Verification Status', value: userProfile?.is_verified === false ? 'Pending' : 'Verified' },
+    { icon: 'speedometer-outline' as const, label: 'Reliability Score', value: `${userProfile?.reliability_score ?? 0}/100` },
+    { icon: 'card-outline' as const, label: 'Flutterwave Payment Methods' },
+    { icon: 'document-text-outline' as const, label: 'Audit Log & Evidence Chain', route: '/evidence-audit' },
+    { icon: 'settings-outline' as const, label: 'Settings' },
+    { icon: 'help-circle-outline' as const, label: 'Help & Support' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -35,28 +44,40 @@ export default function AccountScreen() {
           <View style={styles.avatar}>
             <Ionicons name="person" size={32} color="#fff" />
           </View>
-          <View style={{ marginLeft: 16 }}>
-            <Text style={styles.profileName}>John Doe</Text>
-            <Text style={styles.profileEmail}>john.doe@example.com</Text>
+          <View style={{ marginLeft: 16, flex: 1 }}>
+            <Text style={styles.profileName}>
+              {userProfile ? `${userProfile.first_name} ${userProfile.last_name || ''}` : 'John Doe'}
+            </Text>
+            <Text style={styles.profileEmail}>
+              {userProfile?.email || 'test@homebase.com'}
+            </Text>
           </View>
-          <TouchableOpacity style={styles.editBtn}>
-            <Ionicons name="create-outline" size={20} color="#2e7d32" />
-          </TouchableOpacity>
+          <View style={styles.verifiedChip}>
+            <Ionicons name="checkmark-circle" size={16} color="#2e7d32" />
+            <Text style={styles.verifiedText}>Verified</Text>
+          </View>
         </View>
 
         <View style={styles.menuSection}>
           {ACCOUNT_MENU.map((item, idx) => (
-            <TouchableOpacity key={idx} style={styles.menuRow}>
+            <TouchableOpacity
+              key={idx}
+              style={styles.menuRow}
+              onPress={() => {
+                if (item.route) router.push(item.route as any);
+              }}
+            >
               <View style={styles.menuLeft}>
                 <Ionicons name={item.icon} size={22} color="#2e7d32" />
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </View>
               <View style={styles.menuRight}>
-                {'badge' in item && (
+                {item.badge && (
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{item.badge}</Text>
                   </View>
                 )}
+                {item.value && <Text style={styles.valueText}>{item.value}</Text>}
                 <Ionicons name="chevron-forward" size={18} color="#a5d6a7" />
               </View>
             </TouchableOpacity>
@@ -83,7 +104,7 @@ export default function AccountScreen() {
             <Ionicons name="log-out-outline" size={40} color="#d32f2f" />
             <Text style={styles.modalTitle}>Confirm Logout</Text>
             <Text style={styles.modalMessage}>
-              Are you sure you want to log out?
+              Are you sure you want to log out of Homebase OS?
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -115,18 +136,18 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: '#e8f5e9',
   },
   scrollContent: {
-    paddingTop: 60, paddingHorizontal: 20, paddingBottom: 40,
+    paddingTop: 54, paddingHorizontal: 20, paddingBottom: 40,
   },
   headerTitle: { fontSize: 24, fontWeight: '800', color: '#1b5e20', marginBottom: 20 },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.75)',
     borderRadius: 20,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.75)',
+    borderColor: 'rgba(255,255,255,0.85)',
   },
   avatar: {
     width: 56,
@@ -138,23 +159,25 @@ const styles = StyleSheet.create({
   },
   profileName: { fontSize: 17, fontWeight: '700', color: '#1b5e20' },
   profileEmail: { fontSize: 13, color: '#4c8c4a', marginTop: 4 },
-  editBtn: { marginLeft: 'auto' },
+  verifiedChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e8f5e9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4 },
+  verifiedText: { color: '#2e7d32', fontSize: 11, fontWeight: '700' },
   menuSection: { gap: 4 },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.4)',
+    backgroundColor: 'rgba(255,255,255,0.6)',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 6,
   },
-  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 },
   menuLabel: { fontSize: 15, fontWeight: '600', color: '#1b5e20' },
   menuRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  valueText: { fontSize: 13, fontWeight: '600', color: '#2e7d32' },
   badge: {
-    backgroundColor: '#ff6f00',
+    backgroundColor: '#2e7d32',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -166,7 +189,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     marginTop: 32,
-    backgroundColor: 'rgba(255,255,255,0.4)',
+    backgroundColor: 'rgba(255,255,255,0.6)',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -183,7 +206,7 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 32,
+    padding: 24,
     alignItems: 'center',
     marginHorizontal: 32,
     shadowColor: '#000',
@@ -193,7 +216,7 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   modalTitle: { fontSize: 20, fontWeight: '800', color: '#1b5e20', marginTop: 16, marginBottom: 8 },
-  modalMessage: { fontSize: 15, color: '#4c8c4a', textAlign: 'center', lineHeight: 22 },
+  modalMessage: { fontSize: 14, color: '#4c8c4a', textAlign: 'center', lineHeight: 20 },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 24, width: '100%' },
   cancelBtn: {
     flex: 1,
