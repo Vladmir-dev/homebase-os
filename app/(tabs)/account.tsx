@@ -23,6 +23,11 @@ export default function AccountScreen() {
   const [assetName, setAssetName] = useState("");
   const [assetType, setAssetType] = useState("household");
   const [assetLocation, setAssetLocation] = useState("");
+  const [assetDescription, setAssetDescription] = useState("");
+  const [gpsCoordinates, setGpsCoordinates] = useState("");
+  const [rentAmount, setRentAmount] = useState("");
+  const [budgetPlanned, setBudgetPlanned] = useState("");
+  const [totalUnits, setTotalUnits] = useState("");
   const [creatingAsset, setCreatingAsset] = useState(false);
   const [assetError, setAssetError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
@@ -228,6 +233,7 @@ export default function AccountScreen() {
                     { label: "Household", value: "household" },
                     { label: "Rental", value: "rental_unit" },
                     { label: "Construction", value: "construction_site" },
+                    { label: "Estate", value: "estate" },
                   ].map((option) => (
                     <TouchableOpacity
                       key={option.value}
@@ -255,12 +261,76 @@ export default function AccountScreen() {
                 <Text style={styles.formLabel}>Location</Text>
                 <TextInput
                   style={styles.formInput}
-                  placeholder="Enter location (optional)"
+                  placeholder="Enter location"
                   placeholderTextColor="#8a9f88"
                   value={assetLocation}
                   onChangeText={(text) => setAssetLocation(text)}
                 />
               </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Description</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter asset description"
+                  placeholderTextColor="#8a9f88"
+                  value={assetDescription}
+                  onChangeText={(text) => setAssetDescription(text)}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>GPS coordinates</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter GPS coordinates"
+                  placeholderTextColor="#8a9f88"
+                  value={gpsCoordinates}
+                  onChangeText={(text) => setGpsCoordinates(text)}
+                />
+              </View>
+
+              {assetType === "rental_unit" && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Monthly rent</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="Enter monthly rent"
+                    placeholderTextColor="#8a9f88"
+                    keyboardType="numeric"
+                    value={rentAmount}
+                    onChangeText={(text) => setRentAmount(text)}
+                  />
+                </View>
+              )}
+
+              {assetType === "construction_site" && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Budget planned</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="Enter planned budget"
+                    placeholderTextColor="#8a9f88"
+                    keyboardType="numeric"
+                    value={budgetPlanned}
+                    onChangeText={(text) => setBudgetPlanned(text)}
+                  />
+                </View>
+              )}
+
+              {assetType === "estate" && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Total units</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="Enter total units"
+                    placeholderTextColor="#8a9f88"
+                    keyboardType="numeric"
+                    value={totalUnits}
+                    onChangeText={(text) => setTotalUnits(text)}
+                  />
+                </View>
+              )}
 
               {assetError ? (
                 <Text style={styles.errorText}>{assetError}</Text>
@@ -273,6 +343,11 @@ export default function AccountScreen() {
                     setShowAssetModal(false);
                     setAssetName("");
                     setAssetLocation("");
+                    setAssetDescription("");
+                    setGpsCoordinates("");
+                    setRentAmount("");
+                    setBudgetPlanned("");
+                    setTotalUnits("");
                     setAssetError("");
                   }}
                 >
@@ -285,17 +360,60 @@ export default function AccountScreen() {
                       setAssetError("Please enter an asset name");
                       return;
                     }
+                    if (!assetLocation.trim()) {
+                      setAssetError("Please enter an asset location");
+                      return;
+                    }
+                    if (assetType === "rental_unit" && !rentAmount.trim()) {
+                      setAssetError(
+                        "Monthly rent is required for rental units",
+                      );
+                      return;
+                    }
+                    if (
+                      assetType === "construction_site" &&
+                      !budgetPlanned.trim()
+                    ) {
+                      setAssetError(
+                        "Budget planned is required for construction sites",
+                      );
+                      return;
+                    }
                     setCreatingAsset(true);
                     setAssetError("");
                     try {
+                      const payload: Record<string, unknown> = {
+                        description: assetDescription.trim(),
+                        gps_coordinates: gpsCoordinates.trim(),
+                      };
+
+                      if (assetType === "rental_unit") {
+                        payload.rent_amount = parseFloat(rentAmount);
+                        payload.currency = "UGX";
+                      }
+                      if (assetType === "construction_site") {
+                        payload.budget_planned = parseFloat(budgetPlanned);
+                      }
+                      if (assetType === "estate") {
+                        payload.total_units = totalUnits.trim()
+                          ? parseInt(totalUnits, 10)
+                          : 0;
+                      }
+
                       await createAsset(
                         assetName.trim(),
                         assetType,
-                        assetLocation.trim() || undefined,
+                        assetLocation.trim(),
+                        payload,
                       );
                       setShowAssetModal(false);
                       setAssetName("");
                       setAssetLocation("");
+                      setAssetDescription("");
+                      setGpsCoordinates("");
+                      setRentAmount("");
+                      setBudgetPlanned("");
+                      setTotalUnits("");
                     } catch (error: any) {
                       console.warn("Create asset failed:", error);
                       setAssetError(error?.message || "Failed to create asset");
