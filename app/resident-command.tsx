@@ -28,6 +28,7 @@ export default function ResidentCommandScreen() {
   const [staff, setStaff] = useState<any[]>([]);
   const [chama, setChama] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
+  const [groceryOrders, setGroceryOrders] = useState<any[]>([]);
   const [staffModal, setStaffModal] = useState(false);
   const [savingStaff, setSavingStaff] = useState(false);
   const [staffForm, setStaffForm] = useState({
@@ -48,14 +49,16 @@ export default function ResidentCommandScreen() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [staffData, chamaData, roleData] = await Promise.all([
+      const [staffData, chamaData, roleData, groceryData] = await Promise.all([
         api.getDomesticStaff().catch(() => []),
         api.getChamaContributions(userProfile?.id).catch(() => []),
         api.getAssetRoles().catch(() => []),
+        api.getGroceryOrders().catch(() => []),
       ]);
       setStaff(Array.isArray(staffData) ? staffData : []);
       setChama(Array.isArray(chamaData) ? chamaData : []);
       setRoles(Array.isArray(roleData) ? roleData : []);
+      setGroceryOrders(Array.isArray(groceryData) ? groceryData : []);
     } finally {
       setLoading(false);
     }
@@ -135,6 +138,19 @@ export default function ResidentCommandScreen() {
     }
   };
 
+  const confirmContribution = async (item: any) => {
+    setSavingAction(true);
+    try {
+      await api.confirmChamaContribution(item.id);
+      Alert.alert('Confirmed', `Contribution round #${item.contribution_number} marked confirmed.`);
+      loadData();
+    } catch (error: any) {
+      Alert.alert('Confirm Failed', error.message || 'Could not confirm contribution.');
+    } finally {
+      setSavingAction(false);
+    }
+  };
+
   const sendGroceryOrder = async () => {
     const items = groceryItems
       .split(',')
@@ -157,6 +173,19 @@ export default function ResidentCommandScreen() {
       Alert.alert('Order Sent', 'Kadogo grocery order has been submitted.');
     } catch (error: any) {
       Alert.alert('Order Failed', error.message || 'Could not send grocery order.');
+    } finally {
+      setSavingAction(false);
+    }
+  };
+
+  const cancelGroceryOrder = async (order: any) => {
+    setSavingAction(true);
+    try {
+      await api.cancelGroceryOrder(order.id);
+      Alert.alert('Cancelled', 'The grocery order has been cancelled.');
+      loadData();
+    } catch (error: any) {
+      Alert.alert('Cancel Failed', error.message || 'Could not cancel grocery order.');
     } finally {
       setSavingAction(false);
     }
@@ -252,6 +281,15 @@ export default function ResidentCommandScreen() {
                     <Text style={styles.itemBadge}>{item.status}</Text>
                   </View>
                   <Text style={styles.itemMeta}>UGX {Number(item.amount || 0).toLocaleString()} due {item.due_date}</Text>
+                  {item.status === 'pending' && (
+                    <TouchableOpacity
+                      style={styles.secondaryButton}
+                      onPress={() => confirmContribution(item)}
+                      disabled={savingAction}
+                    >
+                      {savingAction ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Mark Paid</Text>}
+                    </TouchableOpacity>
+                  )}
                 </View>
               ))}
             </View>
@@ -292,6 +330,34 @@ export default function ResidentCommandScreen() {
                 {savingAction ? <ActivityIndicator color="#fff" /> : <Ionicons name="send-outline" size={17} color="#fff" />}
                 <Text style={styles.primaryButtonText}>Submit Grocery Order</Text>
               </TouchableOpacity>
+              <Text style={styles.inputLabel}>Order History ({groceryOrders.length})</Text>
+              {groceryOrders.slice(0, 6).map((order) => (
+                <View key={order.id} style={styles.itemCard}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>
+                      {Array.isArray(order.items) && order.items.length
+                        ? order.items.map((item: any) => item.name || item).join(', ')
+                        : 'Grocery order'}
+                    </Text>
+                    <Text style={styles.itemBadge}>{order.status}</Text>
+                  </View>
+                  <Text style={styles.itemMeta}>
+                    {order.mode} | {order.created_at ? new Date(order.created_at).toLocaleDateString() : ''}
+                  </Text>
+                  {order.status === 'pending' && (
+                    <TouchableOpacity
+                      style={styles.secondaryButton}
+                      onPress={() => cancelGroceryOrder(order)}
+                      disabled={savingAction}
+                    >
+                      {savingAction ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Cancel Order</Text>}
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+              {groceryOrders.length === 0 && (
+                <Text style={styles.emptyText}>No grocery orders yet.</Text>
+              )}
             </View>
           )}
         </ScrollView>
@@ -361,6 +427,9 @@ const styles = StyleSheet.create({
   itemTitle: { color: '#1b5e20', fontSize: 15, fontWeight: '800', flex: 1 },
   itemBadge: { color: '#2e7d32', backgroundColor: '#e8f5e9', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
   itemMeta: { color: '#4c8c4a', fontSize: 12, lineHeight: 17 },
+  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  secondaryButtonText: { color: '#2e7d32', fontSize: 13, fontWeight: '800' },
+  emptyText: { color: '#4c8c4a', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },
   formRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   input: { flex: 1, minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1b5e20', fontWeight: '700' },
   squareAction: { width: 48, height: 46, borderRadius: 8, backgroundColor: '#2e7d32', alignItems: 'center', justifyContent: 'center' },

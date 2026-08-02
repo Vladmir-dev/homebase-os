@@ -1,21 +1,66 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, TextInput, ActivityIndicator, Alert } from 'react-native';
 
 import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
+
+type PaymentStatus = 'idle' | 'initializing' | 'pending' | 'successful' | 'failed' | 'error';
 
 export default function CheckoutScreen() {
   const router = useRouter();
-  const { cart, cartTotal, clearCart, processCheckoutPayment, userProfile } = useApp();
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState(userProfile?.phone_number || '+256700000000');
+  const {
+    cart,
+    cartTotal,
+    serviceFee,
+    grandTotal,
+    escrowFeeRate,
+    clearCart,
+    processCheckoutPayment,
+    refreshAssetBalances,
+    userProfile,
+  } = useApp();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState(userProfile?.phone_number || '');
   const [loading, setLoading] = useState(false);
   const [paymentInstruction, setPaymentInstruction] = useState('');
   const [paymentId, setPaymentId] = useState<number | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const serviceFee = Math.round(cartTotal * 0.05);
-  const grandTotal = cartTotal + serviceFee;
+  const stopPolling = () => {
+    if (pollTimer.current) {
+      clearInterval(pollTimer.current);
+      pollTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
+
+  const pollPaymentStatus = (id: number) => {
+    stopPolling();
+    pollTimer.current = setInterval(async () => {
+      try {
+        const res = await api.checkPaymentStatus(id);
+        if (res.status === 'successful') {
+          stopPolling();
+          setPaymentStatus('successful');
+          setPaymentInstruction('Payment confirmed and escrowed by the platform.');
+          await refreshAssetBalances();
+        } else if (res.status === 'failed') {
+          stopPolling();
+          setPaymentStatus('failed');
+          setPaymentInstruction('Payment was not completed.');
+        }
+      } catch (e) {
+        // Keep polling; the webhook may still be on its way.
+        console.warn('Payment status check error:', e);
+      }
+    }, 4000);
+  };
 
   const handlePlaceOrder = async () => {
     if (!phoneNumber.trim()) {
@@ -23,30 +68,69 @@ export default function CheckoutScreen() {
       return;
     }
     setLoading(true);
+    setPaymentStatus('initializing');
 
     try {
       const res = await processCheckoutPayment(phoneNumber.trim());
       setPaymentId(res.payment_id);
-      
-      const instructionNote = res.next_action?.payment_instruction?.note || 
+
+      const instructionNote =
+        res.next_action?.payment_instruction?.note ||
         `Payment prompt sent to ${phoneNumber}. Please authorize on your mobile phone.`;
-      
       setPaymentInstruction(instructionNote);
-      setShowSuccess(true);
+
+      setPaymentStatus('pending');
+      setModalVisible(true);
+      if (res.payment_id) {
+        pollPaymentStatus(res.payment_id);
+      }
     } catch (err: any) {
       console.warn('Payment initialization notice:', err);
-      setPaymentInstruction(`Order recorded! Please authorize payment on ${phoneNumber}.`);
-      setShowSuccess(true);
+      setPaymentStatus('error');
+      setPaymentInstruction(
+        `Payment request recorded. Please authorize payment on ${phoneNumber}.`,
+      );
+      setModalVisible(true);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDone = () => {
+    stopPolling();
     clearCart();
-    setShowSuccess(false);
+    setModalVisible(false);
     router.replace('/(tabs)');
   };
+
+  const handleRetry = () => {
+    stopPolling();
+    setModalVisible(false);
+    setPaymentStatus('idle');
+  };
+
+  const statusIcon =
+    paymentStatus === 'failed' || paymentStatus === 'error'
+      ? 'close-circle'
+      : paymentStatus === 'pending'
+        ? 'time'
+        : 'checkmark-circle';
+
+  const statusColor =
+    paymentStatus === 'failed' || paymentStatus === 'error'
+      ? '#c62828'
+      : paymentStatus === 'pending'
+        ? '#f9a825'
+        : '#2e7d32';
+
+  const modalTitle =
+    paymentStatus === 'pending'
+      ? 'Payment Processing'
+      : paymentStatus === 'successful'
+        ? 'Payment Confirmed & Escrowed'
+        : paymentStatus === 'failed' || paymentStatus === 'error'
+          ? 'Payment Not Completed'
+          : 'Payment Prompt Triggered!';
 
   return (
     <View style={styles.container}>
@@ -104,16 +188,16 @@ export default function CheckoutScreen() {
           <Text style={styles.totalValue}>UGX {cartTotal.toLocaleString()}</Text>
         </View>
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Platform Escrow Fee (5%)</Text>
+          <Text style={styles.totalLabel}>Platform Escrow Fee ({escrowFeeRate}%)</Text>
           <Text style={styles.totalValue}>UGX {serviceFee.toLocaleString()}</Text>
         </View>
         <View style={[styles.totalRow, styles.grandTotalRow]}>
           <Text style={styles.grandTotalLabel}>Total</Text>
           <Text style={styles.grandTotalValue}>UGX {grandTotal.toLocaleString()}</Text>
         </View>
-        
-        <TouchableOpacity 
-          style={[styles.placeOrderBtn, loading && styles.disabledBtn]} 
+
+        <TouchableOpacity
+          style={[styles.placeOrderBtn, loading && styles.disabledBtn]}
           onPress={handlePlaceOrder}
           disabled={loading}
         >
@@ -125,14 +209,26 @@ export default function CheckoutScreen() {
         </TouchableOpacity>
       </View>
 
-      <Modal visible={showSuccess} transparent animationType="fade">
+      <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Ionicons name="checkmark-circle" size={64} color="#2e7d32" />
-            <Text style={styles.modalTitle}>Payment Prompt Triggered!</Text>
+            {paymentStatus === 'pending' ? (
+              <ActivityIndicator size="large" color={statusColor} />
+            ) : (
+              <Ionicons name={statusIcon} size={64} color={statusColor} />
+            )}
+            <Text style={styles.modalTitle}>{modalTitle}</Text>
             <Text style={styles.modalMessage}>
-              {paymentInstruction || "Your payment request has been sent to your phone. Check your handset to complete the PIN authorization."}
+              {paymentInstruction || 'Please complete the PIN authorization on your phone.'}
             </Text>
+            {paymentStatus === 'pending' ? (
+              <Text style={styles.modalHint}>Confirming payment with the gateway…</Text>
+            ) : null}
+            {paymentStatus === 'failed' || paymentStatus === 'error' ? (
+              <TouchableOpacity style={styles.retryBtn} onPress={handleRetry}>
+                <Text style={styles.doneBtnText}>Try Again</Text>
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity style={styles.doneBtn} onPress={handleDone}>
               <Text style={styles.doneBtnText}>Return to Dashboard</Text>
             </TouchableOpacity>
@@ -187,6 +283,8 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center', width: '100%' },
   modalTitle: { fontSize: 20, fontWeight: '800', color: '#1b5e20', marginTop: 16, marginBottom: 8 },
   modalMessage: { fontSize: 14, color: '#4c8c4a', textAlign: 'center', lineHeight: 20, marginBottom: 20 },
+  modalHint: { fontSize: 12, color: '#f9a825', marginBottom: 12 },
   doneBtn: { backgroundColor: '#2e7d32', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, width: '100%', alignItems: 'center' },
+  retryBtn: { backgroundColor: '#c62828', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, width: '100%', alignItems: 'center', marginBottom: 10 },
   doneBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

@@ -30,6 +30,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   const [maintenanceList, setMaintenanceList] = useState<any[]>([]);
   const [utilityReadings, setUtilityReadings] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [ledger, setLedger] = useState<any>(null);
   const [generatingReport, setGeneratingReport] = useState<string | null>(null);
   const [utilityType, setUtilityType] = useState<"yaka" | "nwsc">("yaka");
   const [utilityValue, setUtilityValue] = useState("");
@@ -43,6 +44,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   const [leaseTerms, setLeaseTerms] = useState("");
   const [editingLease, setEditingLease] = useState<any | null>(null);
   const [submittingLease, setSubmittingLease] = useState(false);
+  const [previewTenantView, setPreviewTenantView] = useState(false);
 
   // Maintenance Modal state
   const [showMaintModal, setShowMaintModal] = useState(false);
@@ -66,6 +68,12 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
       if (Array.isArray(maintData)) setMaintenanceList(maintData);
       if (Array.isArray(utilityData)) setUtilityReadings(utilityData);
       if (Array.isArray(reportData)) setReports(reportData);
+      if (activeAsset?.backendId) {
+        const ledgerData = await api
+          .getLedgerByAsset(activeAsset.backendId)
+          .catch(() => null);
+        if (ledgerData) setLedger(ledgerData);
+      }
     } catch (e) {
       console.warn("Failed loading rental workspace data:", e);
     } finally {
@@ -128,22 +136,35 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
     }
     setSubmittingLease(true);
     try {
-      const payload = {
-        asset: activeAsset.backendId,
-        tenant: Number(leaseTenantId),
-        start_date: leaseStart,
-        end_date: leaseEnd,
-        monthly_rent: parseFloat(leaseRent),
-        deposit_amount: leaseDeposit.trim() ? parseFloat(leaseDeposit) : 0,
-        currency: "UGX",
-        terms: leaseTerms.trim(),
-      };
       if (editingLease) {
+        const payload = {
+          asset: activeAsset.backendId,
+          tenant: editingLease.tenant,
+          start_date: leaseStart,
+          end_date: leaseEnd,
+          monthly_rent: parseFloat(leaseRent),
+          deposit_amount: leaseDeposit.trim() ? parseFloat(leaseDeposit) : 0,
+          currency: "UGX",
+          terms: leaseTerms.trim(),
+        };
         await api.updateLease(editingLease.id, payload);
         Alert.alert("Updated", "Lease was updated successfully.");
       } else {
-        await api.createLease(payload);
-        Alert.alert("Created", "Lease was created successfully.");
+        await api.createLeaseByEmail({
+          asset: activeAsset.backendId,
+          tenant_email: leaseTenantId.trim().toLowerCase(),
+          start_date: leaseStart,
+          end_date: leaseEnd,
+          monthly_rent: parseFloat(leaseRent),
+          deposit_amount: leaseDeposit.trim() ? parseFloat(leaseDeposit) : 0,
+          currency: "UGX",
+          terms: leaseTerms.trim(),
+          activate: true,
+        });
+        Alert.alert(
+          "Lease Created & Activated",
+          "The tenant has been granted access. They will see this unit when they log in.",
+        );
       }
       setShowLeaseModal(false);
       setEditingLease(null);
@@ -164,7 +185,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   const handleEditLease = (lease: any) => {
     setEditingLease(lease);
     setShowLeaseModal(true);
-    setLeaseTenantId(String(lease.tenant));
+    setLeaseTenantId(lease.tenant_email || String(lease.tenant || ""));
     setLeaseStart(lease.start_date || "");
     setLeaseEnd(lease.end_date || "");
     setLeaseRent(String(lease.monthly_rent || ""));
@@ -175,7 +196,10 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   const handleActivateLease = async (lease: any) => {
     try {
       await api.activateLease(lease.id);
-      Alert.alert("Activated", "Lease has been activated.");
+      Alert.alert(
+        "Activated",
+        "Lease is now active. The tenant now has role-scoped access to this unit.",
+      );
       loadData();
     } catch (error: any) {
       Alert.alert(
@@ -207,9 +231,10 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
         amount: Math.round(amount),
         currency: "UGX",
         payment_method: "mobile_money",
-        phone_number: "+256700111222",
+        phone_number: userProfile?.phone_number || "+256700111222",
         description: `Rent Payment Prompt for ${tenantEmail}`,
         asset_id: activeAsset?.backendId,
+        transaction_type: "rent",
       });
       Alert.alert(
         "Payment Prompt Triggered",
@@ -298,10 +323,13 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   }
 
   // LANDLORD VIEW
-  if (isOwner) {
+  if (isOwner && !previewTenantView) {
     const activeLeases = leases.filter(
       (l) => l.status === "active" || l.status === "pending_signature",
     );
+    const ledgerEntries = Array.isArray(ledger?.entries) ? ledger.entries : [];
+    const ledgerBalance = Number(ledger?.running_balance ?? 0) || 0;
+    const yieldCollected = Number(ledger?.total_credit ?? 0) || 0;
     const totalExposure = activeLeases.reduce(
       (sum, l) => sum + (parseFloat(l.monthly_rent) || 0),
       0,
@@ -330,17 +358,21 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
       <View style={styles.container}>
         <View style={styles.portfolioSummaryGrid}>
           <View style={styles.summaryMiniCard}>
-            <Text style={styles.summaryLabel}>Active Leases</Text>
-            <Text style={styles.summaryValue}>{activeLeases.length || 1}</Text>
-            <Text style={styles.summarySubtext}>Registered Contracts</Text>
+            <Text style={styles.summaryLabel}>Ledger Balance</Text>
+            <Text style={[styles.summaryValue, { color: "#2e7d32" }]}>
+              UGX {ledgerBalance.toLocaleString()}
+            </Text>
+            <Text style={styles.summarySubtext}>Escrow-Custodied Balance</Text>
           </View>
 
           <View style={styles.summaryMiniCard}>
-            <Text style={styles.summaryLabel}>Monthly Yield</Text>
+            <Text style={styles.summaryLabel}>Yield Collected</Text>
             <Text style={[styles.summaryValue, { color: "#2e7d32" }]}>
-              UGX {(totalExposure / 1000000 || 0.8).toFixed(1)}M
+              UGX {yieldCollected.toLocaleString()}
             </Text>
-            <Text style={styles.summarySubtext}>Contracted Revenue</Text>
+            <Text style={styles.summarySubtext}>
+              {activeLeases.length} Active Lease{activeLeases.length === 1 ? "" : "s"} · {totalExposure.toLocaleString()} Contracted/Month
+            </Text>
           </View>
         </View>
 
@@ -362,6 +394,16 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
             <Text style={styles.secondaryGlassButtonLongText}>+ New Lease</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.previewButton}
+          onPress={() => setPreviewTenantView(true)}
+        >
+          <Ionicons name="eye-outline" size={17} color="#1b5e20" />
+          <Text style={styles.auditActionText}>
+            Preview Tenant View (what the renter sees)
+          </Text>
+          <Ionicons name="chevron-forward" size={17} color="#4c8c4a" />
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.auditActionButton}
           onPress={() => router.push("/evidence-audit" as any)}
@@ -399,12 +441,60 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
           ))}
         </View>
 
+        <View style={styles.listActionBar}>
+          <Text style={styles.sectionHeading}>Ledger Activity</Text>
+        </View>
+        {ledgerEntries.length > 0 ? (
+          ledgerEntries.map((entry: any) => {
+            const isCredit = Number(entry.credit) > 0;
+            const amount = isCredit
+              ? Number(entry.credit)
+              : Number(entry.debit) || 0;
+            return (
+              <View key={entry.id} style={styles.glassPropertyCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.unitTitle}>
+                    {(entry.transaction_type || "movement")
+                      .replace(/_/g, " ")
+                      .toUpperCase()}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      { fontSize: 15, color: isCredit ? "#2e7d32" : "#b3261e" },
+                    ]}
+                  >
+                    {isCredit ? "+" : "−"} UGX {amount.toLocaleString()}
+                  </Text>
+                </View>
+                <Text style={styles.tenantNameText}>
+                  {entry.description ||
+                    entry.transaction_reference ||
+                    "Ledger movement"}
+                </Text>
+                <Text style={styles.metaText}>
+                  Running Balance: UGX{" "}
+                  {(Number(entry.running_balance) || 0).toLocaleString()} ·{" "}
+                  {entry.created_at ? new Date(entry.created_at).toLocaleString() : "—"}
+                </Text>
+              </View>
+            );
+          })
+        ) : (
+          <View style={styles.glassPropertyCard}>
+            <Text style={styles.metaText}>
+              No ledger activity yet. Payments and releases settle into the
+              escrow ledger here.
+            </Text>
+          </View>
+        )}
+
         {leases.length > 0 ? (
           leases.map((lease) => (
             <View key={lease.id} style={styles.glassPropertyCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.unitTitle}>
-                  {lease.asset_name || activeAsset?.name || "Ntinda Unit 2"}
+                  {lease.asset_name || activeAsset?.name || "Rental Unit"}
                 </Text>
                 <View
                   style={[
@@ -427,11 +517,11 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
               </View>
 
               <Text style={styles.tenantNameText}>
-                Tenant: {lease.tenant_email || "Jane Tenant"}
+                Tenant: {lease.tenant_email || "Tenant"}
               </Text>
               <Text style={styles.metaText}>
                 Monthly Commitment: UGX{" "}
-                {parseFloat(lease.monthly_rent || 800000).toLocaleString()}
+                {(parseFloat(lease.monthly_rent) || 0).toLocaleString()}
               </Text>
 
               <View style={styles.healthBarContainer}>
@@ -467,6 +557,38 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                     Push Mobile Money Prompt
                   </Text>
                 </TouchableOpacity>
+
+                {lease.status === "draft" ||
+                lease.status === "pending_signature" ? (
+                  <TouchableOpacity
+                    style={styles.secondaryGlassButtonLong}
+                    onPress={() => handleActivateLease(lease)}
+                  >
+                    <Text style={styles.secondaryGlassButtonLongText}>
+                      Activate Lease (grants tenant access)
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.secondaryGlassButtonLong}
+                    onPress={() => handleEditLease(lease)}
+                  >
+                    <Text style={styles.secondaryGlassButtonLongText}>
+                      Edit Lease
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {lease.status === "active" && (
+                  <TouchableOpacity
+                    style={styles.dangerActionButton}
+                    onPress={() => handleTerminateLease(lease)}
+                  >
+                    <Text style={styles.dangerActionText}>
+                      Terminate Lease
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           ))
@@ -587,9 +709,23 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   }
 
   // TENANT VIEW
-  if (isTenant) {
+  if (isTenant || previewTenantView) {
     return (
       <View style={styles.container}>
+        {previewTenantView && (
+          <View style={styles.previewBanner}>
+            <Ionicons name="eye-outline" size={16} color="#1b5e20" />
+            <Text style={styles.previewBannerText}>
+              Previewing the tenant view. You are signed in as the landlord.
+            </Text>
+            <TouchableOpacity
+              style={styles.previewBannerExit}
+              onPress={() => setPreviewTenantView(false)}
+            >
+              <Text style={styles.previewBannerExitText}>Exit Preview</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <Text style={styles.sectionHeading}>My Rental Lease Statement</Text>
 
         {leases.length > 0 ? (
@@ -756,12 +892,18 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                 {editingLease ? "Edit Lease" : "Create Lease"}
               </Text>
 
+              <Text style={styles.modalHint}>
+                {editingLease
+                  ? "Tenant email (account email)"
+                  : "Tenant email — must be a registered account. Lease is created active and the tenant is granted access automatically."}
+              </Text>
               <TextInput
-                placeholder="Tenant ID"
+                placeholder="tenant@example.com"
                 style={styles.modalInput}
                 value={leaseTenantId}
                 onChangeText={setLeaseTenantId}
-                keyboardType="numeric"
+                autoCapitalize="none"
+                keyboardType="email-address"
               />
               <TextInput
                 placeholder="Start Date (YYYY-MM-DD)"
@@ -1115,6 +1257,52 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
   },
+  modalHint: {
+    fontSize: 12,
+    color: "#6b8c70",
+    marginBottom: 8,
+    lineHeight: 17,
+  },
+  previewButton: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(46, 125, 50, 0.16)",
+    borderStyle: "dashed",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  previewBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#e8f5e9",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+  },
+  previewBannerText: { flex: 1, color: "#1b5e20", fontSize: 12 },
+  previewBannerExit: {
+    backgroundColor: "#2e7d32",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  previewBannerExitText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  dangerActionButton: {
+    backgroundColor: "#fff5f5",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(211, 47, 47, 0.3)",
+  },
+  dangerActionText: { color: "#c62828", fontSize: 14, fontWeight: "700" },
   modalActionsRow: { flexDirection: "row", gap: 12, marginTop: 8 },
   modalCancelBtn: {
     flex: 1,

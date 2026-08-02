@@ -25,7 +25,7 @@ export default function HomeScreen() {
   const [backendCategories, setBackendCategories] = useState<any[]>([]);
   
   // Destructure context states
-  const { activeAsset, assets, setActiveAssetById, isOffline } = useApp();
+  const { activeAsset, assets, setActiveAssetById, isOffline, hasScope } = useApp();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -130,8 +130,10 @@ export default function HomeScreen() {
             <Text style={styles.ledgerBalance}>UGX {activeAsset.balance.toLocaleString()}</Text>
             <View style={styles.intelligenceBubble}>
               <Text style={styles.intelligenceText}>
-                {activeAsset.type === 'RENTAL' && activeAsset.role === 'OWNER' 
-                  ? "💡 Collection Notice: 2 Units are in arrears. Total outstanding exposure is UGX 2,400,000."
+                {activeAsset.type === 'RENTAL' && hasScope('write:ledger') 
+                  ? `💡 Your escrow ledger holds UGX ${activeAsset.balance.toLocaleString()} for this property. Collection notices are generated from active lease A/R.`
+                  : activeAsset.type === 'RENTAL'
+                  ? "💡 Your lease ledger is being tracked in escrow. Ask your landlord to publish the current A/R statement."
                   : activeAsset.type === 'CONSTRUCTION'
                   ? "💡 Construction Insight: Foundation milestone completed. Steel rebar delivery logged on ledger."
                   : "💡 Market Insight: Cement prices in Industrial Area dropped 4%. Buy now to optimize building logistics costs."}
@@ -153,6 +155,11 @@ export default function HomeScreen() {
               <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/health-services' as any)}>
                 <Ionicons name="medkit-outline" size={18} color="#1b5e20" />
                 <Text style={styles.commandButtonText}>Open Health Services</Text>
+                <Ionicons name="chevron-forward" size={18} color="#4c8c4a" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/trust-center' as any)}>
+                <Ionicons name="shield-checkmark-outline" size={18} color="#1b5e20" />
+                <Text style={styles.commandButtonText}>Open Trust Center</Text>
                 <Ionicons name="chevron-forward" size={18} color="#4c8c4a" />
               </TouchableOpacity>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>

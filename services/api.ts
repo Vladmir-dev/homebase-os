@@ -52,6 +52,7 @@ class ApiClient {
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    const isGet = !options.method || options.method.toUpperCase() === "GET";
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -89,7 +90,11 @@ class ApiClient {
                 `HTTP ${retryResponse.status}`,
             );
           }
-          return await retryResponse.json();
+          const retryData = await retryResponse.json();
+          if (isGet) {
+            await this.writeCache(endpoint, retryData);
+          }
+          return retryData;
         }
       }
 
@@ -107,10 +112,46 @@ class ApiClient {
         );
       }
 
+      if (isGet) {
+        await this.writeCache(endpoint, data);
+      }
+
       return data as T;
     } catch (error: any) {
+      // Offline-first: fall back to the last-known cached response for reads.
+      if (isGet) {
+        const cached = await this.readCache<T>(endpoint);
+        if (cached !== null) {
+          console.warn(`Offline fallback to cache [${endpoint}]`);
+          return cached;
+        }
+      }
       console.warn(`API Request Error [${endpoint}]:`, error.message || error);
       throw error;
+    }
+  }
+
+  private async readCache<T>(endpoint: string): Promise<T | null> {
+    try {
+      const raw = await AsyncStorage.getItem(`@homebase_os:cache:${endpoint}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" && "data" in parsed
+        ? (parsed.data as T)
+        : (parsed as T);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private async writeCache(endpoint: string, data: unknown) {
+    try {
+      await AsyncStorage.setItem(
+        `@homebase_os:cache:${endpoint}`,
+        JSON.stringify({ data, ts: Date.now() }),
+      );
+    } catch (e) {
+      console.warn(`Cache write failed [${endpoint}]:`, e);
     }
   }
 
@@ -245,6 +286,16 @@ class ApiClient {
     });
   }
 
+  async getGroceryOrders() {
+    return this.request("/grocery-orders/");
+  }
+
+  async cancelGroceryOrder(orderId: number | string) {
+    return this.request(`/grocery-orders/${orderId}/cancel/`, {
+      method: "POST",
+    });
+  }
+
   async getDomesticStaff() {
     return this.request("/staff/");
   }
@@ -307,6 +358,23 @@ class ApiClient {
     status?: string;
   }) {
     return this.request("/leases/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async createLeaseByEmail(payload: {
+    asset: number;
+    tenant_email: string;
+    start_date: string;
+    end_date: string;
+    monthly_rent: number;
+    deposit_amount?: number;
+    currency?: string;
+    terms?: string;
+    activate?: boolean;
+  }) {
+    return this.request("/leases/create-by-email/", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -389,6 +457,12 @@ class ApiClient {
   async getProjectPhases(siteId?: number) {
     const endpoint = siteId ? `/phases/?site_id=${siteId}` : "/phases/";
     return this.request(endpoint);
+  }
+
+  async getConstructionBudget(siteId: number | string) {
+    return this.request(
+      `/construction-sites/budget/?site_id=${siteId}`
+    );
   }
 
   async createProjectPhase(payload: {
@@ -517,12 +591,30 @@ class ApiClient {
     });
   }
 
+  async triageSymptoms(payload: {
+    symptoms: string[];
+    age?: number;
+    duration_days?: number;
+  }) {
+    return this.request("/symptoms/triage/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
   async getDoctors() {
     return this.request("/doctors/");
   }
 
   async getPharmacies() {
     return this.request("/pharmacies/");
+  }
+
+  async discoverPharmacies(location?: string) {
+    const endpoint = location
+      ? `/pharmacies/discover/?location=${encodeURIComponent(location)}`
+      : "/pharmacies/discover/";
+    return this.request(endpoint);
   }
 
   async getMedicines(pharmacyId?: number) {
@@ -553,6 +645,19 @@ class ApiClient {
     return this.request(endpoint);
   }
 
+  async cancelHealthBooking(bookingId: number | string) {
+    return this.request(`/health-bookings/${bookingId}/cancel/`, {
+      method: "POST",
+    });
+  }
+
+  async getPrescriptions(bookingId?: number) {
+    const endpoint = bookingId
+      ? `/prescriptions/?booking_id=${bookingId}`
+      : "/prescriptions/";
+    return this.request(endpoint);
+  }
+
   async requestAmbulance(payload: {
     location: string;
     gps_coordinates?: string;
@@ -562,6 +667,13 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  }
+
+  async getAmbulanceDispatches(patientId?: number) {
+    const endpoint = patientId
+      ? `/ambulance/?patient_id=${patientId}`
+      : "/ambulance/";
+    return this.request(endpoint);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -592,12 +704,27 @@ class ApiClient {
     return this.request("/ledger/balance/");
   }
 
+  async getLedgerByAsset(assetId: number | string) {
+    return this.request(`/ledger/by-asset/?asset_id=${assetId}`);
+  }
+
+  async getEscrowConfig() {
+    return this.request("/payments/escrow-config/");
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  TRUST & EVIDENCE CHAIN ENDPOINTS
   // ═══════════════════════════════════════════════════════════
 
   async getEvidence(assetId?: number) {
     const endpoint = assetId ? `/evidence/?asset_id=${assetId}` : "/evidence/";
+    return this.request(endpoint);
+  }
+
+  async checkEvidenceIntegrity(assetId?: number) {
+    const endpoint = assetId
+      ? `/evidence/integrity/?asset_id=${assetId}`
+      : "/evidence/integrity/";
     return this.request(endpoint);
   }
 
@@ -611,6 +738,28 @@ class ApiClient {
     });
   }
 
+  async fileStrike(
+    userId: number | string,
+    reason: string,
+    severity: "minor" | "moderate" | "severe",
+  ) {
+    return this.request(`/users/${userId}/strike/`, {
+      method: "POST",
+      body: JSON.stringify({ reason, severity }),
+    });
+  }
+
+  async getUserStrikes(userId: number | string) {
+    return this.request(`/users/${userId}/strikes/`);
+  }
+
+  async getTrustSummary(assetId?: number) {
+    const endpoint = assetId
+      ? `/trust-summary/?asset_id=${assetId}`
+      : "/trust-summary/";
+    return this.request(endpoint);
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  PAYMENTS (FLUTTERWAVE V4) ENDPOINTS
   // ═══════════════════════════════════════════════════════════
@@ -622,6 +771,7 @@ class ApiClient {
     phone_number?: string;
     description?: string;
     asset_id?: number;
+    transaction_type?: string;
   }) {
     return this.request("/payments/initialize/", {
       method: "POST",

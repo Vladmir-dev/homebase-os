@@ -171,6 +171,10 @@ function RootLayoutNav() {
             name="health-services"
             options={{ animation: "slide_from_right" }}
           />
+          <Stack.Screen
+            name="trust-center"
+            options={{ animation: "slide_from_right" }}
+          />
         </Stack>
       ) : (
         <Stack screenOptions={{ headerShown: false }}>

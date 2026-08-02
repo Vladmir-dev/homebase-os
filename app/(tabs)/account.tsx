@@ -52,6 +52,15 @@ export default function AccountScreen() {
       icon: "speedometer-outline" as const,
       label: "Reliability Score",
       value: `${userProfile?.reliability_score ?? 0}/100`,
+      badge: userProfile?.reliability_band
+        ? userProfile.reliability_band.charAt(0).toUpperCase() +
+          userProfile.reliability_band.slice(1)
+        : undefined,
+    },
+    {
+      icon: "warning-outline" as const,
+      label: "Active Strikes",
+      value: `${userProfile?.reliability_strikes ?? 0}`,
     },
     { icon: "card-outline" as const, label: "Flutterwave Payment Methods" },
     {
