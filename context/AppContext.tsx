@@ -67,6 +67,7 @@ interface AppContextType {
     name: string,
     assetType: string,
     location?: string,
+    payload?: Record<string, unknown>,
   ) => Promise<any>;
   isOffline: boolean;
   hasScope: (requiredScope: string) => boolean;
@@ -279,9 +280,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     name: string,
     assetType: string,
     location?: string,
+    payload: Record<string, unknown> = {},
   ) => {
-    const payload = { name, asset_type: assetType, location };
-    const result = await api.createAsset(payload);
+    const requestPayload = {
+      name,
+      asset_type: assetType,
+      location: location || "",
+      ...payload,
+    };
+    const result = await api.createAsset(requestPayload);
     await fetchAssetsFromBackend();
     return result;
   };
