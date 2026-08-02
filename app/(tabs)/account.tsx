@@ -2,12 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
     Modal,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -16,20 +14,9 @@ import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 
 export default function AccountScreen() {
-  const { logout, userProfile, assets, createAsset } = useApp();
+  const { logout, userProfile, assets } = useApp();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showAssetModal, setShowAssetModal] = useState(false);
-  const [assetName, setAssetName] = useState("");
-  const [assetType, setAssetType] = useState("household");
-  const [assetLocation, setAssetLocation] = useState("");
-  const [assetDescription, setAssetDescription] = useState("");
-  const [gpsCoordinates, setGpsCoordinates] = useState("");
-  const [rentAmount, setRentAmount] = useState("");
-  const [budgetPlanned, setBudgetPlanned] = useState("");
-  const [totalUnits, setTotalUnits] = useState("");
-  const [creatingAsset, setCreatingAsset] = useState(false);
-  const [assetError, setAssetError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -49,7 +36,7 @@ export default function AccountScreen() {
       icon: "business-outline" as const,
       label: "My Registered Assets",
       badge: `${assets.length}`,
-      action: () => setShowAssetModal(true),
+      route: "/registered-assets",
     },
     {
       icon: "notifications-outline" as const,
@@ -109,55 +96,17 @@ export default function AccountScreen() {
             <Text style={styles.sectionHeading}>My Registered Assets</Text>
             <TouchableOpacity
               style={styles.createAssetButton}
-              onPress={() => setShowAssetModal(true)}
+              onPress={() => router.push("/registered-assets" as any)}
             >
-              <Text style={styles.createAssetButtonText}>Create asset</Text>
+              <Text style={styles.createAssetButtonText}>
+                Open asset dashboard
+              </Text>
             </TouchableOpacity>
           </View>
-          {assets.length > 0 ? (
-            assets.map((asset) => (
-              <View key={asset.id} style={styles.assetCard}>
-                <View style={styles.assetCardLabel}>
-                  <Ionicons
-                    name={
-                      asset.type === "HOUSEHOLD"
-                        ? "home"
-                        : asset.type === "RENTAL"
-                          ? "business"
-                          : asset.type === "CONSTRUCTION"
-                            ? "construct"
-                            : "shapes"
-                    }
-                    size={18}
-                    color="#2e7d32"
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text style={styles.assetName}>{asset.name}</Text>
-                </View>
-                <Text style={styles.assetMeta}>
-                  {asset.role} · {asset.location || "No location set"}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyStateCard}>
-              <Text style={styles.emptyStateTitle}>
-                No registered assets yet
-              </Text>
-              <Text style={styles.emptyStateText}>
-                You can create your first asset here and start managing
-                services, bookings, and maintenance from your account.
-              </Text>
-              <TouchableOpacity
-                style={styles.emptyStateAction}
-                onPress={() => setShowAssetModal(true)}
-              >
-                <Text style={styles.emptyStateActionText}>
-                  Click here to create assets
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <Text style={styles.assetSummaryText}>
+            View and manage all your registered assets on the dedicated assets
+            screen.
+          </Text>
         </View>
 
         <View style={styles.menuSection}>
@@ -199,265 +148,37 @@ export default function AccountScreen() {
       </ScrollView>
 
       <Modal
-        visible={showAssetModal || showLogoutModal}
+        visible={showLogoutModal}
         transparent
         animationType="fade"
-        onRequestClose={() => {
-          if (showAssetModal) setShowAssetModal(false);
-          if (showLogoutModal) setShowLogoutModal(false);
-        }}
+        onRequestClose={() => setShowLogoutModal(false)}
       >
         <View style={styles.modalOverlay}>
-          {showAssetModal ? (
-            <View style={styles.assetModalContent}>
-              <Text style={styles.modalTitle}>Create an Asset</Text>
-              <Text style={styles.modalMessage}>
-                Add your first asset to start managing services and bookings.
-              </Text>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Asset name</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter asset name"
-                  placeholderTextColor="#8a9f88"
-                  value={assetName}
-                  onChangeText={(text) => setAssetName(text)}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Asset type</Text>
-                <View style={styles.typeOptionsRow}>
-                  {[
-                    { label: "Household", value: "household" },
-                    { label: "Rental", value: "rental_unit" },
-                    { label: "Construction", value: "construction_site" },
-                    { label: "Estate", value: "estate" },
-                  ].map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[
-                        styles.typeOption,
-                        assetType === option.value && styles.typeOptionActive,
-                      ]}
-                      onPress={() => setAssetType(option.value)}
-                    >
-                      <Text
-                        style={
-                          assetType === option.value
-                            ? styles.typeOptionTextActive
-                            : styles.typeOptionText
-                        }
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Location</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter location"
-                  placeholderTextColor="#8a9f88"
-                  value={assetLocation}
-                  onChangeText={(text) => setAssetLocation(text)}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Description</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter asset description"
-                  placeholderTextColor="#8a9f88"
-                  value={assetDescription}
-                  onChangeText={(text) => setAssetDescription(text)}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>GPS coordinates</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter GPS coordinates"
-                  placeholderTextColor="#8a9f88"
-                  value={gpsCoordinates}
-                  onChangeText={(text) => setGpsCoordinates(text)}
-                />
-              </View>
-
-              {assetType === "rental_unit" && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Monthly rent</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter monthly rent"
-                    placeholderTextColor="#8a9f88"
-                    keyboardType="numeric"
-                    value={rentAmount}
-                    onChangeText={(text) => setRentAmount(text)}
-                  />
-                </View>
-              )}
-
-              {assetType === "construction_site" && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Budget planned</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter planned budget"
-                    placeholderTextColor="#8a9f88"
-                    keyboardType="numeric"
-                    value={budgetPlanned}
-                    onChangeText={(text) => setBudgetPlanned(text)}
-                  />
-                </View>
-              )}
-
-              {assetType === "estate" && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Total units</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter total units"
-                    placeholderTextColor="#8a9f88"
-                    keyboardType="numeric"
-                    value={totalUnits}
-                    onChangeText={(text) => setTotalUnits(text)}
-                  />
-                </View>
-              )}
-
-              {assetError ? (
-                <Text style={styles.errorText}>{assetError}</Text>
-              ) : null}
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={[styles.cancelBtn, { flex: 1 }]}
-                  onPress={() => {
-                    setShowAssetModal(false);
-                    setAssetName("");
-                    setAssetLocation("");
-                    setAssetDescription("");
-                    setGpsCoordinates("");
-                    setRentAmount("");
-                    setBudgetPlanned("");
-                    setTotalUnits("");
-                    setAssetError("");
-                  }}
-                >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.confirmBtn, { flex: 1 }]}
-                  onPress={async () => {
-                    if (!assetName.trim()) {
-                      setAssetError("Please enter an asset name");
-                      return;
-                    }
-                    if (!assetLocation.trim()) {
-                      setAssetError("Please enter an asset location");
-                      return;
-                    }
-                    if (assetType === "rental_unit" && !rentAmount.trim()) {
-                      setAssetError(
-                        "Monthly rent is required for rental units",
-                      );
-                      return;
-                    }
-                    if (
-                      assetType === "construction_site" &&
-                      !budgetPlanned.trim()
-                    ) {
-                      setAssetError(
-                        "Budget planned is required for construction sites",
-                      );
-                      return;
-                    }
-                    setCreatingAsset(true);
-                    setAssetError("");
-                    try {
-                      const payload: Record<string, unknown> = {
-                        description: assetDescription.trim(),
-                        gps_coordinates: gpsCoordinates.trim(),
-                      };
-
-                      if (assetType === "rental_unit") {
-                        payload.rent_amount = parseFloat(rentAmount);
-                        payload.currency = "UGX";
-                      }
-                      if (assetType === "construction_site") {
-                        payload.budget_planned = parseFloat(budgetPlanned);
-                      }
-                      if (assetType === "estate") {
-                        payload.total_units = totalUnits.trim()
-                          ? parseInt(totalUnits, 10)
-                          : 0;
-                      }
-
-                      await createAsset(
-                        assetName.trim(),
-                        assetType,
-                        assetLocation.trim(),
-                        payload,
-                      );
-                      setShowAssetModal(false);
-                      setAssetName("");
-                      setAssetLocation("");
-                      setAssetDescription("");
-                      setGpsCoordinates("");
-                      setRentAmount("");
-                      setBudgetPlanned("");
-                      setTotalUnits("");
-                    } catch (error: any) {
-                      console.warn("Create asset failed:", error);
-                      setAssetError(error?.message || "Failed to create asset");
-                    } finally {
-                      setCreatingAsset(false);
-                    }
-                  }}
-                  disabled={creatingAsset}
-                >
-                  {creatingAsset ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.confirmBtnText}>Create</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
+          <View style={styles.modalContent}>
+            <Ionicons name="log-out-outline" size={40} color="#d32f2f" />
+            <Text style={styles.modalTitle}>Confirm Logout</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to log out of Homebase OS?
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmBtn}
+                onPress={() => {
+                  setShowLogoutModal(false);
+                  logout();
+                  router.replace("/(auth)");
+                }}
+              >
+                <Text style={styles.confirmBtnText}>Logout</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            <View style={styles.modalContent}>
-              <Ionicons name="log-out-outline" size={40} color="#d32f2f" />
-              <Text style={styles.modalTitle}>Confirm Logout</Text>
-              <Text style={styles.modalMessage}>
-                Are you sure you want to log out of Homebase OS?
-              </Text>
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => setShowLogoutModal(false)}
-                >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.confirmBtn}
-                  onPress={() => {
-                    setShowLogoutModal(false);
-                    logout();
-                    router.replace("/(auth)");
-                  }}
-                >
-                  <Text style={styles.confirmBtnText}>Logout</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          </View>
         </View>
       </Modal>
     </View>
