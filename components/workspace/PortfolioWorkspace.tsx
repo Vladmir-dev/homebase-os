@@ -704,6 +704,88 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
             </Text>
           </View>
         ))}
+
+        {/* Lease Create / Edit Modal (owner) */}
+        <Modal visible={showLeaseModal} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>
+                {editingLease ? "Edit Lease" : "Create Lease"}
+              </Text>
+
+              <Text style={styles.modalHint}>
+                Tenant email — must be a registered account. Lease is created
+                active and the tenant is granted access automatically.
+              </Text>
+              <TextInput
+                placeholder="tenant@example.com"
+                style={styles.modalInput}
+                value={leaseTenantId}
+                onChangeText={setLeaseTenantId}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <TextInput
+                placeholder="Start Date (YYYY-MM-DD)"
+                style={styles.modalInput}
+                value={leaseStart}
+                onChangeText={setLeaseStart}
+              />
+              <TextInput
+                placeholder="End Date (YYYY-MM-DD)"
+                style={styles.modalInput}
+                value={leaseEnd}
+                onChangeText={setLeaseEnd}
+              />
+              <TextInput
+                placeholder="Monthly Rent"
+                style={styles.modalInput}
+                value={leaseRent}
+                onChangeText={setLeaseRent}
+                keyboardType="numeric"
+              />
+              <TextInput
+                placeholder="Deposit Amount"
+                style={styles.modalInput}
+                value={leaseDeposit}
+                onChangeText={setLeaseDeposit}
+                keyboardType="numeric"
+              />
+              <TextInput
+                placeholder="Terms (optional)"
+                style={styles.modalInput}
+                value={leaseTerms}
+                onChangeText={setLeaseTerms}
+              />
+
+              <View style={styles.modalActionsRow}>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => {
+                    setShowLeaseModal(false);
+                    setEditingLease(null);
+                  }}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalSubmitBtn}
+                  onPress={handleCreateLease}
+                  disabled={submittingLease}
+                >
+                  {submittingLease ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.modalSubmitText}>
+                      {editingLease ? "Update Lease" : "Create Lease"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
