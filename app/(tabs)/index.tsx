@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -17,13 +17,40 @@ import ServiceCard from '../../components/ServiceCard';
 import { useApp } from '../../context/AppContext'; 
 import PortfolioWorkspace from '../../components/workspace/PortfolioWorkspace';
 import GenesisWorkspace from '../../components/workspace/GenesisWorkspace';
+import { api } from '../../services/api';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [backendCategories, setBackendCategories] = useState<any[]>([]);
   
   // Destructure context states
   const { activeAsset, assets, setActiveAssetById, isOffline } = useApp();
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await api.getCategories();
+        if (Array.isArray(cats) && cats.length > 0) {
+          setBackendCategories(cats);
+        }
+      } catch (e) {
+        console.warn('Backend categories fetch failed:', e);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  // Display categories array
+  const displayCategories = backendCategories.length > 0
+    ? backendCategories.map((c, idx) => ({
+        id: String(c.id || c.slug),
+        name: c.name,
+        totalBookings: `${c.professionals_count || 12} Pros`,
+        rating: '4.8',
+        bannerImage: MOCK_CATEGORIES[idx % MOCK_CATEGORIES.length]?.bannerImage || 'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?q=80&w=600',
+      }))
+    : MOCK_CATEGORIES;
 
   return (
     <View style={styles.masterWrapper}>
@@ -60,7 +87,7 @@ export default function HomeScreen() {
                 }}
               >
                 <Ionicons 
-                  name={asset.type === 'HOUSEHOLD' ? 'home' : asset.type === 'RENTAL' ? 'business' : 'construct'} 
+                  name={asset.type === 'HOUSEHOLD' ? 'home' : asset.type === 'RENTAL' ? 'business' : asset.type === 'CONSTRUCTION' ? 'construct' : 'shapes'} 
                   size={16} 
                   color="#2e7d32" 
                   style={{ marginRight: 8 }} 
@@ -105,6 +132,8 @@ export default function HomeScreen() {
               <Text style={styles.intelligenceText}>
                 {activeAsset.type === 'RENTAL' && activeAsset.role === 'OWNER' 
                   ? "💡 Collection Notice: 2 Units are in arrears. Total outstanding exposure is UGX 2,400,000."
+                  : activeAsset.type === 'CONSTRUCTION'
+                  ? "💡 Construction Insight: Foundation milestone completed. Steel rebar delivery logged on ledger."
                   : "💡 Market Insight: Cement prices in Industrial Area dropped 4%. Buy now to optimize building logistics costs."}
               </Text>
             </View>
@@ -112,12 +141,22 @@ export default function HomeScreen() {
         )}
 
         {/* 3. DYNAMIC WORKSPACE DISPATCH ENGINE */}
-        {activeAsset?.type === 'HOUSEHOLD' && (
+        {(activeAsset?.type === 'HOUSEHOLD' || activeAsset?.type === 'ESTATE') && (
           <View>
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionHeading}>What service do you need?</Text>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/resident-command' as any)}>
+                <Ionicons name="home-outline" size={18} color="#1b5e20" />
+                <Text style={styles.commandButtonText}>Open Resident Command</Text>
+                <Ionicons name="chevron-forward" size={18} color="#4c8c4a" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/health-services' as any)}>
+                <Ionicons name="medkit-outline" size={18} color="#1b5e20" />
+                <Text style={styles.commandButtonText}>Open Health Services</Text>
+                <Ionicons name="chevron-forward" size={18} color="#4c8c4a" />
+              </TouchableOpacity>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
-                {MOCK_CATEGORIES.map((category) => (
+                {displayCategories.map((category) => (
                   <ServiceCard
                     key={category.id}
                     imageUri={category.bannerImage}
@@ -160,7 +199,6 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* REFACTOR EDGE: Pass the role property cleanly to isolate Landlord views */}
         {activeAsset?.type === 'RENTAL' && (
           <PortfolioWorkspace role={activeAsset.role} assetId={activeAsset.id} />
         )}
@@ -205,7 +243,6 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: '#1f3a24', fontWeight: '500' },
   
   scrollBody: { flex: 1 },
-  // Increased top padding padding safety layer to account for dynamic search placeholder scaling 
   scrollContent: { paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 155 : 190, paddingBottom: 32 },
   
   accountantCard: {
@@ -225,4 +262,18 @@ const styles = StyleSheet.create({
   sectionHeading: { fontSize: 20, fontWeight: '700', color: '#1a3b1c', letterSpacing: -0.4 },
   seeAllText: { color: '#4a9e4d', fontWeight: '600', fontSize: 14 },
   carouselScroll: { paddingBottom: 12, paddingRight: 16 },
+  commandButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.16)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  commandButtonText: { flex: 1, color: '#1b5e20', fontSize: 14, fontWeight: '800' },
 });

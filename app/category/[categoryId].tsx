@@ -27,20 +27,12 @@ export default function CategoryDetailScreen() {
   const router = useRouter();
   const { cart, addToCart, removeFromCart, cartTotal, cartCount } = useApp();
 
-  const currentCategory = MOCK_CATEGORIES.find(c => c.id === categoryId);
-  const subCategories = MOCK_SUBCATEGORIES.filter(s => s.categoryId === categoryId);
-  const [selectedSubCatId, setSelectedSubCatId] = useState(subCategories[0]?.id || '');
+  const currentCategory = MOCK_CATEGORIES.find(c => c.id === categoryId) || MOCK_CATEGORIES[0];
+  const subCategories = MOCK_SUBCATEGORIES.filter(s => s.categoryId === currentCategory.id);
+  const [selectedSubCatId, setSelectedSubCatId] = useState(subCategories[0]?.id || MOCK_SUBCATEGORIES[0].id);
 
-  const displayedServices = MOCK_SERVICES.filter(srv => srv.subCategoryId === selectedSubCatId);
+  const displayedServices = MOCK_SERVICES.filter(srv => srv.subCategoryId === selectedSubCatId || !selectedSubCatId);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
-
-  if (!currentCategory) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Category Not Found</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.mainContainer}>

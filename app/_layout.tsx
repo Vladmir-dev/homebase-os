@@ -152,6 +152,9 @@ function RootLayoutNav() {
           <Stack.Screen name="category/[categoryId]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="checkout" options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name="evidence-audit" options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name="resident-command" options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name="health-services" options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack>
       ) : (
         <Stack>

@@ -1,20 +1,35 @@
-// app/(auth)/index.tsx
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useApp } from '../../context/AppContext';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useApp(); // Assumes your context has a function that toggles isAuthenticated to true
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login } = useApp();
+  const [email, setEmail] = useState('test@homebase.com');
+  const [password, setPassword] = useState('TestPass123!');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSignIn = () => {
-    if (email.trim() && password.trim()) {
-      login( email, password ); // Step 8: Sets context isAuthenticated state to true
-      // navigate to main app stack
-      router.push('/(tabs)' as any);
+  const handleSignIn = async () => {
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Please enter both email and password.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const res = await login(email.trim(), password.trim());
+      if (res.success) {
+        router.push('/(tabs)' as any);
+      } else {
+        setErrorMessage(res.error || 'Login failed. Please check credentials.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An error occurred during login.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -24,7 +39,13 @@ export default function LoginScreen() {
       
       <View style={styles.glassCard}>
         <Text style={styles.titleHeading}>Welcome Back</Text>
-        <Text style={styles.subtitleText}>Log in to book your next premium service</Text>
+        <Text style={styles.subtitleText}>Log in to manage your assets & book services</Text>
+
+        {errorMessage ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : null}
 
         <TextInput
           placeholder="Email Address"
@@ -46,8 +67,16 @@ export default function LoginScreen() {
           autoCapitalize="none"
         />
 
-        <TouchableOpacity style={styles.primaryGreenButton} onPress={handleSignIn}>
-          <Text style={styles.buttonText}>Sign In</Text>
+        <TouchableOpacity 
+          style={[styles.primaryGreenButton, loading && styles.disabledBtn]} 
+          onPress={handleSignIn}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign In</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push('/signup')} style={styles.linkWrapper}>
@@ -63,27 +92,29 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#e8f5e9', justifyContent: 'center', paddingHorizontal: 24 },
   glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.85)',
     shadowColor: '#122615',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
   },
   titleHeading: { fontSize: 24, fontWeight: '800', color: '#1b5e20', marginBottom: 6, textAlign: 'center' },
-  subtitleText: { fontSize: 13, color: '#4c8c4a', textAlign: 'center', marginBottom: 24, fontWeight: '500' },
+  subtitleText: { fontSize: 13, color: '#4c8c4a', textAlign: 'center', marginBottom: 20, fontWeight: '500' },
+  errorBox: { backgroundColor: '#ffebee', padding: 10, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: '#ef9a9a' },
+  errorText: { color: '#c62828', fontSize: 13, textAlign: 'center', fontWeight: '600' },
   glassInput: {
     height: 52,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: 14,
     paddingHorizontal: 16,
     fontSize: 15,
     color: '#1b5e20',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: 'rgba(46, 125, 50, 0.2)',
     marginBottom: 16,
     fontWeight: '500',
   },
@@ -95,6 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
+  disabledBtn: { opacity: 0.7 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
   linkWrapper: { marginTop: 20, alignItems: 'center' },
   footerLinkText: { fontSize: 13, color: '#4c8c4a' },
