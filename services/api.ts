@@ -1,15 +1,42 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
 
-// Standard API Base URL with fallback for Android emulator / local dev / web
+// Standard API Base URL, overridable via EXPO_PUBLIC_API_URL (e.g. .env).
+const DEFAULT_API_BASE_URL = "http://13.63.249.214/api";
+
 const getBaseUrl = () => {
-  if (Platform.OS === "android") {
-    return "https://claimless-cerated-robert.ngrok-free.dev/api";
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
+  if (fromEnv) {
+    return fromEnv.replace(/\/+$/, "");
   }
-  return "https://claimless-cerated-robert.ngrok-free.dev/api";
+  return DEFAULT_API_BASE_URL;
 };
 
 export const API_BASE_URL = getBaseUrl();
+
+export interface ServiceImage {
+  id: number;
+  url: string;
+  position: number;
+}
+
+export interface ServiceItemResponse {
+  id: number;
+  provider: number;
+  provider_email: string;
+  provider_name: string;
+  category: number;
+  category_name: string;
+  name: string;
+  description: string;
+  price: string;
+  currency: string;
+  duration_minutes: number;
+  is_active: boolean;
+  rating: number;
+  reviews_count: number;
+  created_at: string;
+  images: ServiceImage[];
+}
 
 const STORAGE_KEY_TOKEN = "@homebase_os:access_token";
 const STORAGE_KEY_REFRESH = "@homebase_os:refresh_token";
@@ -53,11 +80,16 @@ class ApiClient {
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const isGet = !options.method || options.method.toUpperCase() === "GET";
+    const isFormData = options.body instanceof FormData;
 
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
     };
+
+    // Let fetch set the multipart boundary for FormData bodies.
+    if (!isFormData && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (this.accessToken) {
       headers["Authorization"] = `Bearer ${this.accessToken}`;
@@ -273,6 +305,84 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  SERVICES (PROVIDED SERVICES) ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getServices(params?: {
+    category?: number | string;
+    provider?: string;
+  }) {
+    const query = new URLSearchParams();
+    if (params?.category !== undefined) {
+      query.set("category", String(params.category));
+    }
+    if (params?.provider !== undefined) {
+      query.set("provider", params.provider);
+    }
+    const qs = query.toString();
+    return this.request(qs ? `/services/?${qs}` : "/services/");
+  }
+
+  async getServiceById(id: number | string) {
+    return this.request(`/services/${id}/`);
+  }
+
+  async createService(
+    payload: {
+      name: string;
+      category: number;
+      price: number;
+      description?: string;
+      duration_minutes?: number;
+      currency?: string;
+      is_active?: boolean;
+    },
+    imageFiles: Array<{ uri: string; name: string; type: string }> = [],
+  ) {
+    const body = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        body.append(key, String(value));
+      }
+    });
+    imageFiles.forEach((file) => {
+      body.append("image_files", file as any);
+    });
+    return this.request("/services/", {
+      method: "POST",
+      body,
+    });
+  }
+
+  async updateService(
+    id: number | string,
+    payload: Record<string, unknown>,
+    imageFiles: Array<{ uri: string; name: string; type: string }> = [],
+  ) {
+    const body = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        body.append(key, String(value));
+      }
+    });
+    imageFiles.forEach((file) => {
+      body.append("image_files", file as any);
+    });
+    return this.request(`/services/${id}/`, {
+      method: "PATCH",
+      body,
+    });
+  }
+
+  async deleteService(id: number | string) {
+    return this.request(`/services/${id}/`, { method: "DELETE" });
+  }
+
+  async deleteServiceImage(imageId: number | string) {
+    return this.request(`/service-images/${imageId}/`, { method: "DELETE" });
   }
 
   async createGroceryOrder(payload: {

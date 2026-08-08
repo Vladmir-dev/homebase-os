@@ -93,6 +93,29 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
 
+        <View style={styles.demoRow}>
+          <TouchableOpacity
+            style={styles.demoButton}
+            onPress={() => {
+              setEmail("test@homebase.com");
+              setPassword("TestPass123!");
+              setErrorMessage("");
+            }}
+          >
+            <Text style={styles.demoButtonText}>Owner demo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.demoButton}
+            onPress={() => {
+              setEmail("tenant@homebase.com");
+              setPassword("TestPass123!");
+              setErrorMessage("");
+            }}
+          >
+            <Text style={styles.demoButtonText}>Tenant demo</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
           onPress={() => router.push("./signup" as any)}
           style={styles.linkWrapper}
@@ -183,4 +206,15 @@ const styles = StyleSheet.create({
   linkWrapper: { marginTop: 20, alignItems: "center" },
   footerLinkText: { fontSize: 13, color: "#4c8c4a" },
   boldGreenText: { color: "#1b5e20", fontWeight: "700" },
+  demoRow: { flexDirection: "row", gap: 10, marginTop: 14 },
+  demoButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#f4faf4",
+    borderWidth: 1,
+    borderColor: "rgba(46, 125, 50, 0.25)",
+    alignItems: "center",
+  },
+  demoButtonText: { color: "#2e7d32", fontSize: 13, fontWeight: "700" },
 });

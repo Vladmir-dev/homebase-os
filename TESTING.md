@@ -110,6 +110,25 @@ Demo accounts (from `seed_demo_rental`):
 - [ ] No screen crashes with empty backend data (empty states everywhere)
 - [ ] 403s from a stranger-role action show a readable error, not a blank screen
 
+## 13. Provided services (provider) & hosted backend
+> The app now points at the hosted API `http://13.63.249.214/api` by default
+> (override with `EXPO_PUBLIC_API_URL`). The hosted DB is seeded via backend
+> `seed_data` + `seed_services`; accounts:
+>
+> | Role     | Email                 | Password       |
+> | -------- | --------------------- | -------------- |
+> | Owner    | `test@homebase.com`   | `TestPass123!` |
+> | Tenant   | `tenant@homebase.com` | `TestPass123!` |
+> | Provider | `pro@homebase.com`    | `TestPass123!` |
+>
+> - [ ] Account → **My Provided Services** → provider's services list loads (log in as `pro@homebase.com`)
+> - [ ] **New Service** → create a "Cleaning Service" with name, category, price, photos picked from library
+> - [ ] Created service shows its photos; each photo has an X to delete it
+> - [ ] Edit a service → change price/duration/description; add new photos → saved
+> - [ ] Delete a service (with confirmation modal) → gone from list
+> - [ ] Non-provider account sees no services here (public list still works in the marketplace)
+> - [ ] Login screen **Tenant demo** quick-fill → tenant signs in and sees the rental unit + tenant view
+
 ---
 
 ## Automated tests

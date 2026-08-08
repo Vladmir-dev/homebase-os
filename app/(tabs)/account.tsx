@@ -39,6 +39,11 @@ export default function AccountScreen() {
       route: "/registered-assets",
     },
     {
+      icon: "briefcase-outline" as const,
+      label: "My Provided Services",
+      route: "/my-services",
+    },
+    {
       icon: "notifications-outline" as const,
       label: "Notifications",
       badge: unreadCount > 0 ? `${unreadCount}` : undefined,
