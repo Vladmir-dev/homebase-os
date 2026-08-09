@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.homebase.homebaseos"
+      "package": "com.homebase.homebaseos",
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",

@@ -1,19 +1,3 @@
-export interface ServiceCategory {
-  id: string;
-  name: string;
-  bannerImage?: string;
-  rating: number;
-  totalBookings: string;
-  hasOffers?: boolean;
-}
-
-export interface ServiceSubCategory {
-  id: string;
-  categoryId: string;
-  name: string;
-  icon: string;
-}
-
 export interface ServiceItem {
   id: string;
   subCategoryId: string;
@@ -24,6 +8,7 @@ export interface ServiceItem {
   durationMinutes: number;
   descriptionPoints: string[];
   image: string;
+  images: string[];
 }
 
 export interface CartItem {

@@ -20,7 +20,13 @@ export default function CartScreen() {
 
       {cart.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="cart-outline" size={64} color="#a5d6a7" />
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1586882829491-b81178aa622e?q=80&w=600',
+            }}
+            style={styles.emptyImage}
+            resizeMode="cover"
+          />
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
           <Text style={styles.emptySub}>Add services to get started</Text>
           <TouchableOpacity style={styles.browseBtn} onPress={() => router.replace('/')}>
@@ -79,6 +85,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1b5e20' },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyImage: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#c8e6c9',
+  },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1b5e20', marginTop: 16 },
   emptySub: { fontSize: 14, color: '#4c8c4a', marginTop: 6 },
   browseBtn: {

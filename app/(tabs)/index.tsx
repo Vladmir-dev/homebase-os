@@ -12,7 +12,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { MOCK_CATEGORIES, MOCK_RECOMMENDED } from '../../utils/mockData';
 import ServiceCard from '../../components/ServiceCard';
 import { useApp } from '../../context/AppContext'; 
 import PortfolioWorkspace from '../../components/workspace/PortfolioWorkspace';
@@ -42,15 +41,15 @@ export default function HomeScreen() {
   }, []);
 
   // Display categories array
-  const displayCategories = backendCategories.length > 0
-    ? backendCategories.map((c, idx) => ({
-        id: String(c.id || c.slug),
-        name: c.name,
-        totalBookings: `${c.professionals_count || 12} Pros`,
-        rating: '4.8',
-        bannerImage: MOCK_CATEGORIES[idx % MOCK_CATEGORIES.length]?.bannerImage || 'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?q=80&w=600',
-      }))
-    : MOCK_CATEGORIES;
+  const displayCategories = backendCategories.map((c) => ({
+    id: String(c.id || c.slug),
+    name: c.name,
+    totalBookings: `${c.professionals_count || 0} Pros`,
+    rating: '4.8',
+    bannerImage:
+      c.image_url ||
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600',
+  }));
 
   return (
     <View style={styles.masterWrapper}>
@@ -63,10 +62,7 @@ export default function HomeScreen() {
             <View style={styles.assetTitleWrapper}>
               <Text style={styles.assetNameText}>{activeAsset?.name ?? 'Select Identity Asset'}</Text>
               <Ionicons name="chevron-down" size={16} color="#1b5e20" style={{ marginLeft: 4 }} />
-            </View>
-            <View style={styles.escrowBadge}>
-              <Text style={styles.badgeText}>Bank Escrowed</Text>
-            </View>
+            </View> 
           </TouchableOpacity>
           
           <View style={styles.rightHeaderActions}>
@@ -163,46 +159,27 @@ export default function HomeScreen() {
                 <Ionicons name="chevron-forward" size={18} color="#4c8c4a" />
               </TouchableOpacity>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
-                {displayCategories.map((category) => (
-                  <ServiceCard
-                    key={category.id}
-                    imageUri={category.bannerImage}
-                    title={category.name}
-                    rating={category.rating}
-                    subtitle={category.totalBookings}
-                    onPress={() => router.push({
-                      pathname: '/category/[categoryId]',
-                      params: { categoryId: category.id }
-                    })}
-                  />
-                ))}
-              </ScrollView>
-            </View>
-
-            {MOCK_RECOMMENDED.map((section) => (
-              <View key={section.title} style={styles.sectionContainer}>
-                <View style={styles.rowHeader}>
-                  <Text style={styles.sectionHeading}>{section.title}</Text>
-                  <TouchableOpacity><Text style={styles.seeAllText}>See all</Text></TouchableOpacity>
-                </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
-                  {section.items.map((item) => (
+                {displayCategories.length > 0 ? (
+                  displayCategories.map((category) => (
                     <ServiceCard
-                      key={item.id}
-                      imageUri={item.image}
-                      title={item.title}
-                      rating={item.rating}
-                      discount={item.discount}
-                      price={item.price}
+                      key={category.id}
+                      imageUri={category.bannerImage}
+                      title={category.name}
+                      rating={category.rating}
+                      subtitle={category.totalBookings}
                       onPress={() => router.push({
                         pathname: '/category/[categoryId]',
-                        params: { categoryId: section.categoryId }
+                        params: { categoryId: category.id }
                       })}
                     />
-                  ))}
-                </ScrollView>
-              </View>
-            ))}
+                  ))
+                ) : (
+                  <View style={styles.noCategoriesBox}>
+                    <Text style={styles.noCategoriesText}>No categories available yet</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
           </View>
         )}
 
@@ -269,6 +246,8 @@ const styles = StyleSheet.create({
   sectionHeading: { fontSize: 20, fontWeight: '700', color: '#1a3b1c', letterSpacing: -0.4 },
   seeAllText: { color: '#4a9e4d', fontWeight: '600', fontSize: 14 },
   carouselScroll: { paddingBottom: 12, paddingRight: 16 },
+  noCategoriesBox: { alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20 },
+  noCategoriesText: { fontSize: 15, color: '#6b8c70', fontWeight: '600' },
   commandButton: {
     backgroundColor: '#fff',
     borderRadius: 8,

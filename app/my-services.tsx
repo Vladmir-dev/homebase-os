@@ -30,6 +30,7 @@ interface ImageFile {
 interface ServiceFormState {
   name: string;
   category: number;
+  subcategory: number;
   price: string;
   duration_minutes: string;
   description: string;
@@ -39,6 +40,7 @@ interface ServiceFormState {
 const EMPTY_FORM: ServiceFormState = {
   name: "",
   category: 0,
+  subcategory: 0,
   price: "",
   duration_minutes: "",
   description: "",
@@ -51,6 +53,7 @@ export default function MyServicesScreen() {
 
   const [services, setServices] = useState<ServiceItemResponse[]>([]);
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
+  const [subcategories, setSubcategories] = useState<Array<{ id: number; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -93,10 +96,34 @@ export default function MyServicesScreen() {
     }
   };
 
+  const loadSubcategories = async (categoryId: number) => {
+    setSubcategories([]);
+    if (!categoryId) return;
+    try {
+      const data = await api.getSubcategories({ category: categoryId });
+      if (Array.isArray(data) && data.length > 0) {
+        setSubcategories(
+          data.map((s: any) => ({
+            id: Number(s.id),
+            name: s.name || `Sub ${s.id}`,
+          })),
+        );
+      }
+    } catch (e) {
+      console.warn("Failed fetching subcategories:", e);
+    }
+  };
+
+  const selectCategory = async (categoryId: number) => {
+    setForm((prev) => ({ ...prev, category: categoryId, subcategory: 0 }));
+    await loadSubcategories(categoryId);
+  };
+
   const openCreateModal = async () => {
     await loadCategories();
     setEditingService(null);
     setForm(EMPTY_FORM);
+    setSubcategories([]);
     setPickedImages([]);
     setFormModalVisible(true);
   };
@@ -107,11 +134,15 @@ export default function MyServicesScreen() {
     setForm({
       name: service.name,
       category: service.category,
+      subcategory: service.subcategory ?? 0,
       price: String(service.price),
       duration_minutes: String(service.duration_minutes ?? ""),
       description: service.description || "",
       currency: service.currency || "UGX",
     });
+    if (service.category) {
+      await loadSubcategories(service.category);
+    }
     setPickedImages([]);
     setFormModalVisible(true);
   };
@@ -180,6 +211,7 @@ export default function MyServicesScreen() {
       const payload = {
         name: form.name.trim(),
         category: form.category,
+        subcategory: form.subcategory || undefined,
         price: Number(form.price),
         currency: form.currency || "UGX",
         duration_minutes: form.duration_minutes
@@ -367,7 +399,7 @@ export default function MyServicesScreen() {
                       <TouchableOpacity
                         key={cat.id}
                         style={[styles.chip, active && styles.chipActive]}
-                        onPress={() => updateFormField("category", cat.id)}
+                        onPress={() => selectCategory(cat.id)}
                       >
                         <Text
                           style={[
@@ -382,6 +414,35 @@ export default function MyServicesScreen() {
                   })
                 )}
               </View>
+
+              {form.category && subcategories.length > 0 ? (
+                <>
+                  <Text style={styles.fieldLabel}>Sub category</Text>
+                  <View style={styles.chipRow}>
+                    {subcategories.map((sub) => {
+                      const active = form.subcategory === sub.id;
+                      return (
+                        <TouchableOpacity
+                          key={sub.id}
+                          style={[styles.chip, active && styles.chipActive]}
+                          onPress={() =>
+                            updateFormField("subcategory", sub.id)
+                          }
+                        >
+                          <Text
+                            style={[
+                              styles.chipText,
+                              active && styles.chipTextActive,
+                            ]}
+                          >
+                            {sub.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              ) : null}
 
               <Text style={styles.fieldLabel}>Price (UGX)</Text>
               <TextInput

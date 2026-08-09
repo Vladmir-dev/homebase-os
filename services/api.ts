@@ -4,10 +4,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const DEFAULT_API_BASE_URL = "http://13.63.249.214/api";
 
 const getBaseUrl = () => {
-  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
-  if (fromEnv) {
-    return fromEnv.replace(/\/+$/, "");
-  }
+  // const fromEnv = process.env.EXPO_PUBLIC_API_URL;
+  // if (fromEnv) {
+  //   return fromEnv.replace(/\/+$/, "");
+  // }
   return DEFAULT_API_BASE_URL;
 };
 
@@ -19,6 +19,18 @@ export interface ServiceImage {
   position: number;
 }
 
+export interface ServiceSubCategoryResponse {
+  id: number;
+  category: number;
+  category_name: string;
+  name: string;
+  slug: string;
+  icon: string;
+  image?: string;
+  image_url?: string | null;
+  is_active: boolean;
+}
+
 export interface ServiceItemResponse {
   id: number;
   provider: number;
@@ -26,6 +38,8 @@ export interface ServiceItemResponse {
   provider_name: string;
   category: number;
   category_name: string;
+  subcategory: number | null;
+  subcategory_name: string | null;
   name: string;
   description: string;
   price: string;
@@ -314,6 +328,7 @@ class ApiClient {
   async getServices(params?: {
     category?: number | string;
     provider?: string;
+    subcategory?: number | string;
   }) {
     const query = new URLSearchParams();
     if (params?.category !== undefined) {
@@ -322,8 +337,20 @@ class ApiClient {
     if (params?.provider !== undefined) {
       query.set("provider", params.provider);
     }
+    if (params?.subcategory !== undefined) {
+      query.set("subcategory", String(params.subcategory));
+    }
     const qs = query.toString();
     return this.request(qs ? `/services/?${qs}` : "/services/");
+  }
+
+  async getSubcategories(params?: { category?: number | string }) {
+    const query = new URLSearchParams();
+    if (params?.category !== undefined) {
+      query.set("category", String(params.category));
+    }
+    const qs = query.toString();
+    return this.request(qs ? `/subcategories/?${qs}` : "/subcategories/");
   }
 
   async getServiceById(id: number | string) {
@@ -334,6 +361,7 @@ class ApiClient {
     payload: {
       name: string;
       category: number;
+      subcategory?: number;
       price: number;
       description?: string;
       duration_minutes?: number;
