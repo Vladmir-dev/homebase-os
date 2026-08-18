@@ -273,6 +273,71 @@ export default function HomeScreen() {
                 <Ionicons name="chevron-forward" size={18} color="#64748B" />
               </TouchableOpacity>
             )}
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/reconciliation',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="git-compare-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Material Reconciliation</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/timeline',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="git-branch-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Project Timeline</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/procurement',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="bag-handle-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Procurement</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/site-management',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="clipboard-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Site Management</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/construction-dashboard',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="grid-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Construction Dashboard</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
