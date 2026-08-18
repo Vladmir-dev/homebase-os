@@ -589,6 +589,26 @@ class ApiClient {
     });
   }
 
+  async startMaintenance(id: number | string) {
+    return this.request(`/maintenance/${id}/start/`, { method: "POST" });
+  }
+
+  async resolveMaintenance(id: number | string) {
+    return this.request(`/maintenance/${id}/resolve/`, { method: "POST" });
+  }
+
+  async cancelMaintenance(id: number | string) {
+    return this.request(`/maintenance/${id}/cancel/`, { method: "POST" });
+  }
+
+  async getMaintenanceOpen() {
+    return this.request("/maintenance/open/");
+  }
+
+  async getMaintenanceEmergency() {
+    return this.request("/maintenance/emergency/");
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  CONSTRUCTION APP ENDPOINTS
   // ═══════════════════════════════════════════════════════════
@@ -1244,6 +1264,242 @@ class ApiClient {
   async recalculateCostComparison(comparisonId: number | string) {
     return this.request(`/cost-comparisons/${comparisonId}/recalculate/`, {
       method: "POST",
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  PROPERTY EVENTS & DOCUMENTS (PHASE 3)
+  // ═══════════════════════════════════════════════════════════
+
+  async getPropertyEvents(assetId?: number | string) {
+    const params = assetId ? `?asset=${assetId}` : '';
+    return this.request(`/property-events/${params}`);
+  }
+
+  async createPropertyEvent(payload: {
+    asset: number;
+    event_type: string;
+    title: string;
+    description?: string;
+    metadata_json?: any;
+    related_booking?: number;
+    related_maintenance?: number;
+    related_transaction?: number;
+  }) {
+    return this.request("/property-events/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getPropertyDocuments(assetId?: number | string) {
+    const params = assetId ? `?asset=${assetId}` : '';
+    return this.request(`/property-documents/${params}`);
+  }
+
+  async createPropertyDocument(payload: FormData) {
+    return this.request("/property-documents/", {
+      method: "POST",
+      body: payload,
+      headers: {},
+    });
+  }
+
+  async deletePropertyDocument(docId: number | string) {
+    return this.request(`/property-documents/${docId}/`, {
+      method: "DELETE",
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  HOME ACCOUNTING / TRACK IT (PHASE 3)
+  // ═══════════════════════════════════════════════════════════
+
+  async getBudgets(assetId?: number | string) {
+    const params = assetId ? `?asset=${assetId}` : '';
+    return this.request(`/budgets/${params}`);
+  }
+
+  async createBudget(payload: {
+    asset?: number;
+    category: string;
+    monthly_limit: number;
+    currency?: string;
+    month: number;
+    year: number;
+  }) {
+    return this.request("/budgets/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteBudget(budgetId: number | string) {
+    return this.request(`/budgets/${budgetId}/`, { method: "DELETE" });
+  }
+
+  async getReceipts(assetId?: number | string, category?: string) {
+    const params = new URLSearchParams();
+    if (assetId) params.set('asset', String(assetId));
+    if (category) params.set('category', category);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/receipts/${qs}`);
+  }
+
+  async createReceipt(payload: FormData) {
+    return this.request("/receipts/", {
+      method: "POST",
+      body: payload,
+      headers: {},
+    });
+  }
+
+  async deleteReceipt(receiptId: number | string) {
+    return this.request(`/receipts/${receiptId}/`, { method: "DELETE" });
+  }
+
+  async getReceiptSummary(assetId?: number | string, month?: number, year?: number) {
+    const params = new URLSearchParams();
+    if (assetId) params.set('asset', String(assetId));
+    if (month) params.set('month', String(month));
+    if (year) params.set('year', String(year));
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/receipts/summary/${qs}`);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  CONSTRUCTION — BOQ (PHASE 4)
+  // ═══════════════════════════════════════════════════════════
+
+  async getBOQs(phaseId?: number | string, assetId?: number | string) {
+    const params = new URLSearchParams();
+    if (phaseId) params.set('phase', String(phaseId));
+    if (assetId) params.set('asset', String(assetId));
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/construction/boqs/${qs}`);
+  }
+
+  async createBOQ(payload: { phase: number; asset: number; title?: string; notes?: string }) {
+    return this.request("/construction/boqs/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async approveBOQ(boqId: number | string) {
+    return this.request(`/construction/boqs/${boqId}/approve/`, { method: "POST" });
+  }
+
+  async recalculateBOQ(boqId: number | string) {
+    return this.request(`/construction/boqs/${boqId}/recalculate/`, { method: "POST" });
+  }
+
+  async deleteBOQ(boqId: number | string) {
+    return this.request(`/construction/boqs/${boqId}/`, { method: "DELETE" });
+  }
+
+  async getBOQItems(boqId: number | string) {
+    return this.request(`/construction/boq-items/?boq=${boqId}`);
+  }
+
+  async createBOQItem(payload: {
+    boq: number;
+    material_name: string;
+    description?: string;
+    unit?: string;
+    planned_qty: number;
+    unit_price: number;
+    category?: string;
+    sort_order?: number;
+  }) {
+    return this.request("/construction/boq-items/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateBOQItem(itemId: number | string, payload: Partial<{
+    material_name: string;
+    description: string;
+    unit: string;
+    planned_qty: number;
+    unit_price: number;
+    used_qty: number;
+    category: string;
+    sort_order: number;
+  }>) {
+    return this.request(`/construction/boq-items/${itemId}/`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteBOQItem(itemId: number | string) {
+    return this.request(`/construction/boq-items/${itemId}/`, { method: "DELETE" });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  CONSTRUCTION — MILESTONES (PHASE 4)
+  // ═══════════════════════════════════════════════════════════
+
+  async getMilestones(phaseId?: number | string, status?: string) {
+    const params = new URLSearchParams();
+    if (phaseId) params.set('phase', String(phaseId));
+    if (status) params.set('status', status);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/construction/milestones/${qs}`);
+  }
+
+  async createMilestone(payload: {
+    phase: number; title: string; description?: string;
+    priority?: string; target_date?: string; estimated_cost?: number;
+    sort_order?: number; dependencies?: number[];
+  }) {
+    return this.request("/construction/milestones/", {
+      method: "POST", body: JSON.stringify(payload),
+    });
+  }
+
+  async updateMilestone(id: number | string, payload: Partial<{
+    title: string; description: string; priority: string;
+    target_date: string; estimated_cost: number; sort_order: number;
+  }>) {
+    return this.request(`/construction/milestones/${id}/`, {
+      method: "PATCH", body: JSON.stringify(payload),
+    });
+  }
+
+  async startMilestone(id: number | string) {
+    return this.request(`/construction/milestones/${id}/start/`, { method: "POST" });
+  }
+
+  async completeMilestone(id: number | string) {
+    return this.request(`/construction/milestones/${id}/complete/`, { method: "POST" });
+  }
+
+  async skipMilestone(id: number | string) {
+    return this.request(`/construction/milestones/${id}/skip/`, { method: "POST" });
+  }
+
+  async deleteMilestone(id: number | string) {
+    return this.request(`/construction/milestones/${id}/`, { method: "DELETE" });
+  }
+
+  async getMilestoneProofs(milestoneId: number | string) {
+    return this.request(`/construction/milestone-proofs/?milestone=${milestoneId}`);
+  }
+
+  async createMilestoneProof(milestoneId: number | string, payload: {
+    title: string; description?: string; proof_type?: string; file?: any;
+  }) {
+    const formData = new FormData();
+    formData.append('milestone', String(milestoneId));
+    formData.append('title', payload.title);
+    if (payload.description) formData.append('description', payload.description);
+    if (payload.proof_type) formData.append('proof_type', payload.proof_type);
+    if (payload.file) formData.append('file', payload.file);
+    return this.request("/construction/milestone-proofs/", {
+      method: "POST", body: formData, headers: {},
     });
   }
 }

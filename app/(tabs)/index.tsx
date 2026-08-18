@@ -163,6 +163,16 @@ export default function HomeScreen() {
                 <Text style={styles.commandButtonText}>Provider Bookings</Text>
                 <Ionicons name="chevron-forward" size={18} color="#64748B" />
               </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/maintenance' as any)}>
+                <Ionicons name="construct-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Maintenance</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/track-it' as any)}>
+                <Ionicons name="bar-chart-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Track It</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
               <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/wallet' as any)}>
                 <Ionicons name="wallet-outline" size={18} color="#1E293B" />
                 <Text style={styles.commandButtonText}>My Wallet</Text>
@@ -209,6 +219,61 @@ export default function HomeScreen() {
 
         {activeAsset?.type === 'CONSTRUCTION' && (
           <GenesisWorkspace role={activeAsset.role} assetId={activeAsset.id} />
+        )}
+
+        {/* 4. PROPERTY TOOLS — available for all asset types */}
+        {activeAsset?.backendId && (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionHeading}>Property Tools</Text>
+            <TouchableOpacity
+              style={styles.commandButton}
+              onPress={() => router.push({
+                pathname: '/property/[assetId]/history',
+                params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+              })}
+            >
+              <Ionicons name="time-outline" size={18} color="#1E293B" />
+              <Text style={styles.commandButtonText}>Property History</Text>
+              <Ionicons name="chevron-forward" size={18} color="#64748B" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.commandButton}
+              onPress={() => router.push({
+                pathname: '/property/[assetId]/documents',
+                params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+              })}
+            >
+              <Ionicons name="folder-outline" size={18} color="#1E293B" />
+              <Text style={styles.commandButtonText}>Documents</Text>
+              <Ionicons name="chevron-forward" size={18} color="#64748B" />
+            </TouchableOpacity>
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/boq',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="calculator-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Bill of Quantities</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+            {activeAsset.type === 'CONSTRUCTION' && (
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push({
+                  pathname: '/property/[assetId]/milestones',
+                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                })}
+              >
+                <Ionicons name="flag-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Milestones</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       </ScrollView>
     </View>
