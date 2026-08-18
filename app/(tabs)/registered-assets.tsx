@@ -135,7 +135,7 @@ export default function RegisteredAssetsScreen() {
                             : "shapes"
                     }
                     size={18}
-                    color="#2e7d32"
+                    color="#2563EB"
                     style={styles.assetIcon}
                   />
                   <Text style={styles.assetName}>{asset.name}</Text>
@@ -180,7 +180,7 @@ export default function RegisteredAssetsScreen() {
                 style={styles.closeModalButton}
                 onPress={() => setShowCreateModal(false)}
               >
-                <Ionicons name="close" size={22} color="#4c8c4a" />
+                <Ionicons name="close" size={22} color="#64748B" />
               </TouchableOpacity>
             </View>
 
@@ -324,7 +324,7 @@ export default function RegisteredAssetsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e8f5e9" },
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
   scrollContent: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 40 },
   headerRow: {
     flexDirection: "row",
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     gap: 12,
   },
-  title: { fontSize: 24, fontWeight: "800", color: "#1b5e20" },
-  subtitle: { fontSize: 13, color: "#4c8c4a", marginTop: 4 },
+  title: { fontSize: 24, fontWeight: "800", color: "#1E293B" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 4 },
   assetCard: {
     backgroundColor: "rgba(255,255,255,0.8)",
     borderRadius: 18,
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   createAssetButtonHeader: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -370,9 +370,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
   },
-  assetName: { fontSize: 16, fontWeight: "800", color: "#1b5e20" },
+  assetName: { fontSize: 16, fontWeight: "800", color: "#1E293B" },
   assetRole: { fontSize: 12, fontWeight: "700", color: "#4caf50" },
-  assetMeta: { fontSize: 13, color: "#4c8c4a", marginBottom: 8 },
+  assetMeta: { fontSize: 13, color: "#64748B", marginBottom: 8 },
   assetDescription: { fontSize: 13, color: "#6b8f6c" },
   emptyStateCard: {
     backgroundColor: "rgba(255,255,255,0.75)",
@@ -385,21 +385,21 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 8,
   },
-  emptyStateText: { fontSize: 13, color: "#4c8c4a" },
+  emptyStateText: { fontSize: 13, color: "#64748B" },
   createSection: { marginTop: 10 },
   sectionHeading: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 14,
   },
   formGroup: { marginBottom: 14 },
   formLabel: {
     fontSize: 13,
-    color: "#4c8c4a",
+    color: "#64748B",
     marginBottom: 8,
     fontWeight: "700",
   },
@@ -408,9 +408,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     height: 50,
     paddingHorizontal: 16,
-    color: "#1b5e20",
+    color: "#1E293B",
     borderWidth: 1,
-    borderColor: "rgba(46,125,50,0.2)",
+    borderColor: "rgba(37, 99, 235, 0.1)",
   },
   typeOptionsRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   typeOption: {
@@ -418,13 +418,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(46,125,50,0.2)",
+    borderColor: "rgba(37, 99, 235, 0.1)",
     backgroundColor: "rgba(255,255,255,0.9)",
     marginRight: 10,
     marginBottom: 10,
   },
-  typeOptionActive: { backgroundColor: "#2e7d32", borderColor: "#2e7d32" },
-  typeOptionText: { color: "#4c8c4a", fontSize: 13 },
+  typeOptionActive: { backgroundColor: "#2563EB", borderColor: "#2563EB" },
+  typeOptionText: { color: "#64748B", fontSize: 13 },
   typeOptionTextActive: { color: "#fff", fontSize: 13, fontWeight: "700" },
   modalOverlay: {
     flex: 1,
@@ -454,12 +454,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 6,
   },
   modalDescription: {
     fontSize: 13,
-    color: "#4c8c4a",
+    color: "#64748B",
     lineHeight: 20,
     maxWidth: "80%",
   },
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#c62828", fontSize: 13, marginBottom: 12 },
   submitButton: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     height: 52,
     borderRadius: 14,
     alignItems: "center",

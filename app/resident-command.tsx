@@ -202,7 +202,7 @@ export default function ResidentCommandScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#1b5e20" />
+          <Ionicons name="chevron-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Resident Command</Text>
@@ -217,7 +217,7 @@ export default function ResidentCommandScreen() {
             style={[styles.panelTab, activePanel === panel.id && styles.panelTabActive]}
             onPress={() => setActivePanel(panel.id)}
           >
-            <Ionicons name={panel.icon} size={17} color={activePanel === panel.id ? '#fff' : '#2e7d32'} />
+            <Ionicons name={panel.icon} size={17} color={activePanel === panel.id ? '#fff' : '#2563EB'} />
             <Text style={activePanel === panel.id ? styles.panelTabTextActive : styles.panelTabText}>{panel.label}</Text>
           </TouchableOpacity>
         ))}
@@ -225,7 +225,7 @@ export default function ResidentCommandScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2e7d32" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Syncing household controls...</Text>
         </View>
       ) : (
@@ -287,7 +287,7 @@ export default function ResidentCommandScreen() {
                       onPress={() => confirmContribution(item)}
                       disabled={savingAction}
                     >
-                      {savingAction ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Mark Paid</Text>}
+                      {savingAction ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Mark Paid</Text>}
                     </TouchableOpacity>
                   )}
                 </View>
@@ -298,7 +298,7 @@ export default function ResidentCommandScreen() {
           {activePanel === 'family' && (
             <View>
               <View style={styles.infoPanel}>
-                <Ionicons name="qr-code-outline" size={26} color="#2e7d32" />
+                <Ionicons name="qr-code-outline" size={26} color="#2563EB" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.infoTitle}>Family Link Code</Text>
                   <Text style={styles.infoText}>HB-{householdAssetId || '000'}-{userProfile?.id || 'USER'}</Text>
@@ -350,7 +350,7 @@ export default function ResidentCommandScreen() {
                       onPress={() => cancelGroceryOrder(order)}
                       disabled={savingAction}
                     >
-                      {savingAction ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Cancel Order</Text>}
+                      {savingAction ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Cancel Order</Text>}
                     </TouchableOpacity>
                   )}
                 </View>
@@ -402,49 +402,49 @@ function Metric({ value, label }: { value: string | number; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#e8f5e9' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   headerCopy: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '800', color: '#1b5e20' },
-  subtitle: { fontSize: 13, fontWeight: '600', color: '#4c8c4a', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800', color: '#1E293B' },
+  subtitle: { fontSize: 13, fontWeight: '600', color: '#64748B', marginTop: 2 },
   panelTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 14 },
   panelTab: { flex: 1, minHeight: 42, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 3 },
-  panelTabActive: { backgroundColor: '#2e7d32' },
-  panelTabText: { color: '#2e7d32', fontSize: 11, fontWeight: '800' },
+  panelTabActive: { backgroundColor: '#2563EB' },
+  panelTabText: { color: '#2563EB', fontSize: 11, fontWeight: '800' },
   panelTabTextActive: { color: '#fff', fontSize: 11, fontWeight: '800' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#2e7d32', marginTop: 8, fontWeight: '700' },
+  loadingText: { color: '#2563EB', marginTop: 8, fontWeight: '700' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 36 },
-  summaryBand: { flexDirection: 'row', backgroundColor: '#1b5e20', borderRadius: 8, paddingVertical: 16, marginBottom: 14 },
+  summaryBand: { flexDirection: 'row', backgroundColor: '#1E293B', borderRadius: 8, paddingVertical: 16, marginBottom: 14 },
   metric: { flex: 1, alignItems: 'center' },
   metricValue: { color: '#fff', fontSize: 18, fontWeight: '800' },
   metricLabel: { color: '#c8e6c9', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginTop: 4 },
-  primaryButton: { minHeight: 46, backgroundColor: '#2e7d32', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 14 },
+  primaryButton: { minHeight: 46, backgroundColor: '#2563EB', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 14 },
   primaryButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(46,125,50,0.12)' },
+  itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235, 0.08)' },
   itemHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 6 },
-  itemTitle: { color: '#1b5e20', fontSize: 15, fontWeight: '800', flex: 1 },
-  itemBadge: { color: '#2e7d32', backgroundColor: '#e8f5e9', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
-  itemMeta: { color: '#4c8c4a', fontSize: 12, lineHeight: 17 },
-  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#2e7d32', fontSize: 13, fontWeight: '800' },
-  emptyText: { color: '#4c8c4a', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },
+  itemTitle: { color: '#1E293B', fontSize: 15, fontWeight: '800', flex: 1 },
+  itemBadge: { color: '#2563EB', backgroundColor: '#F8FAFC', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
+  itemMeta: { color: '#64748B', fontSize: 12, lineHeight: 17 },
+  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  secondaryButtonText: { color: '#2563EB', fontSize: 13, fontWeight: '800' },
+  emptyText: { color: '#64748B', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },
   formRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  input: { flex: 1, minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1b5e20', fontWeight: '700' },
-  squareAction: { width: 48, height: 46, borderRadius: 8, backgroundColor: '#2e7d32', alignItems: 'center', justifyContent: 'center' },
-  infoPanel: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 8, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(46,125,50,0.12)' },
-  infoTitle: { color: '#1b5e20', fontWeight: '800', fontSize: 15 },
-  infoText: { color: '#4c8c4a', fontWeight: '800', marginTop: 4 },
-  inputLabel: { color: '#1b5e20', fontSize: 13, fontWeight: '800', marginBottom: 8 },
+  input: { flex: 1, minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1E293B', fontWeight: '700' },
+  squareAction: { width: 48, height: 46, borderRadius: 8, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center' },
+  infoPanel: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 8, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(37, 99, 235, 0.08)' },
+  infoTitle: { color: '#1E293B', fontWeight: '800', fontSize: 15 },
+  infoText: { color: '#64748B', fontWeight: '800', marginTop: 4 },
+  inputLabel: { color: '#1E293B', fontSize: 13, fontWeight: '800', marginBottom: 8 },
   largeInput: { height: 110, textAlignVertical: 'top', paddingTop: 12, marginBottom: 14 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 },
   modalCard: { backgroundColor: '#fff', borderRadius: 8, padding: 18 },
-  modalTitle: { color: '#1b5e20', fontSize: 19, fontWeight: '800', marginBottom: 12 },
-  modalInput: { backgroundColor: '#f0f4f1', borderRadius: 8, minHeight: 44, paddingHorizontal: 12, marginBottom: 9, color: '#1b5e20' },
+  modalTitle: { color: '#1E293B', fontSize: 19, fontWeight: '800', marginBottom: 12 },
+  modalInput: { backgroundColor: '#F8FAFC', borderRadius: 8, minHeight: 44, paddingHorizontal: 12, marginBottom: 9, color: '#1E293B' },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 6 },
-  cancelButton: { flex: 1, minHeight: 44, borderRadius: 8, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center' },
-  cancelButtonText: { color: '#2e7d32', fontWeight: '800' },
-  saveButton: { flex: 1, minHeight: 44, borderRadius: 8, backgroundColor: '#2e7d32', alignItems: 'center', justifyContent: 'center' },
+  cancelButton: { flex: 1, minHeight: 44, borderRadius: 8, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center' },
+  cancelButtonText: { color: '#2563EB', fontWeight: '800' },
+  saveButton: { flex: 1, minHeight: 44, borderRadius: 8, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center' },
   saveButtonText: { color: '#fff', fontWeight: '800' },
 });

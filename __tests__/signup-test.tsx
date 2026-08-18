@@ -31,7 +31,7 @@ describe("<SignUpScreen />", () => {
       await render(<SignUpScreen />);
 
     expect(getAllByText("Create Account").length).toBe(2);
-    getByText("Join the Homebase OS ecosystem today");
+    getByText("Join TruHub OS — your home command center");
     getByPlaceholderText("First Name");
     getByPlaceholderText("Last Name (Optional)");
     getByPlaceholderText("Email Address");

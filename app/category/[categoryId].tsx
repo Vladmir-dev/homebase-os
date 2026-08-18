@@ -138,7 +138,7 @@ export default function CategoryDetailScreen() {
     : visibleServices.length === 0
       ? (
           <View style={styles.emptyServicesBox}>
-            <Ionicons name="file-tray-outline" size={36} color="#4c8c4a" />
+            <Ionicons name="file-tray-outline" size={36} color="#64748B" />
             <Text style={styles.emptyServicesTitle}>
               {loadError
                 ? 'Could not load services'
@@ -168,7 +168,7 @@ export default function CategoryDetailScreen() {
               <View style={styles.serviceRowLeft}>
                 <Text style={styles.serviceTitleText}>{service.name}</Text>
                 <View style={styles.serviceMetaRow}>
-                  <Ionicons name="star" size={12} color="#2e7d32" />
+                  <Ionicons name="star" size={12} color="#2563EB" />
                   <Text style={styles.serviceRatingValue}>
                     {service.rating}{' '}
                     <Text style={styles.serviceReviewsCount}>
@@ -238,15 +238,15 @@ export default function CategoryDetailScreen() {
       {/* 1. FIXED GLASS NAVIGATION BAR */}
       <View style={styles.fixedNavBarRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconCircleButton}>
-          <Ionicons name="arrow-back" size={22} color="#1b5e20" />
+          <Ionicons name="arrow-back" size={22} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.navBarTitle} numberOfLines={1}>{currentCategory?.name || 'Category'}</Text>
         <View style={styles.rightNavIcons}>
           <TouchableOpacity style={styles.iconCircleButton}>
-            <Ionicons name="search" size={20} color="#1b5e20" />
+            <Ionicons name="search" size={20} color="#1E293B" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconCircleButton}>
-            <Ionicons name="share-social-outline" size={20} color="#1b5e20" />
+            <Ionicons name="share-social-outline" size={20} color="#1E293B" />
           </TouchableOpacity>
         </View>
       </View>
@@ -264,7 +264,7 @@ export default function CategoryDetailScreen() {
 
         {/* Rating Metrics Layer */}
         <View style={styles.ratingSummaryRow}>
-          <Ionicons name="briefcase" size={14} color="#2e7d32" />
+          <Ionicons name="briefcase" size={14} color="#2563EB" />
           <Text style={styles.ratingTextMain}>
             {currentCategory?.professionals_count ?? 0}{' '}
             <Text style={styles.bookingCountText}>Pros available</Text>
@@ -274,11 +274,11 @@ export default function CategoryDetailScreen() {
         {/* 3. Offer Badging Glass Micro Sliders */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersRowContainer}>
           <View style={styles.offerTagCard}>
-            <Ionicons name="pricetag" size={14} color="#2e7d32" style={{ marginRight: 6 }} />
+            <Ionicons name="pricetag" size={14} color="#2563EB" style={{ marginRight: 6 }} />
             <Text style={styles.offerTagText}>Get visitation fee off <Text style={styles.mutedText}>on orders above UGX499</Text></Text>
           </View>
           <View style={styles.offerTagCard}>
-            <Ionicons name="pricetag" size={14} color="#2e7d32" style={{ marginRight: 6 }} />
+            <Ionicons name="pricetag" size={14} color="#2563EB" style={{ marginRight: 6 }} />
             <Text style={styles.offerTagText}>Get UGX 50 coupon <Text style={styles.mutedText}>After first service</Text></Text>
           </View>
         </ScrollView>
@@ -301,7 +301,7 @@ export default function CategoryDetailScreen() {
                       style={[styles.subCatCardImage, isSelected && styles.selectedSubCatCardImage]}
                     />
                   ) : (
-                    <Ionicons name={sub.icon as any || "construct-outline"} size={26} color={isSelected ? '#fff' : '#2e7d32'} />
+                    <Ionicons name={sub.icon as any || "construct-outline"} size={26} color={isSelected ? '#fff' : '#2563EB'} />
                   )}
                 </View>
                 <Text style={[styles.subCatCardLabel, isSelected && styles.selectedSubCatCardLabel]}>{sub.name}</Text>
@@ -320,7 +320,7 @@ export default function CategoryDetailScreen() {
           {loading ? (
             <ActivityIndicator
               size="large"
-              color="#2e7d32"
+              color="#2563EB"
               style={{ marginTop: 24 }}
             />
           ) : (
@@ -331,7 +331,7 @@ export default function CategoryDetailScreen() {
 
       {/* Persistent Translucent Bottom Footer Strip */}
       {/* <View style={styles.bottomOfferStrip}>
-        <Ionicons name="tag" size={14} color="#1b5e20" style={{ marginRight: 6 }} />
+        <Ionicons name="tag" size={14} color="#1E293B" style={{ marginRight: 6 }} />
         <Text style={styles.bottomOfferStripText}>Get visitation fee off on orders above UGX 499</Text>
       </View> */}
 
@@ -352,7 +352,7 @@ export default function CategoryDetailScreen() {
                   onPress={() => setSelectedService(null)}
                 >
                   <View style={styles.closeCircle}>
-                    <Ionicons name="close" size={22} color="#1b5e20" />
+                    <Ionicons name="close" size={22} color="#1E293B" />
                   </View>
                 </Pressable>
 
@@ -414,7 +414,7 @@ export default function CategoryDetailScreen() {
                   <Text style={styles.modalTitle}>{selectedService.name}</Text>
 
                   <View style={styles.modalRatingRow}>
-                    <Ionicons name="star" size={16} color="#f4b400" />
+                    <Ionicons name="star" size={16} color="#F59E0B" />
                     <Text style={styles.modalRatingText}>
                       {selectedService.rating}
                       <Text style={styles.modalReviews}> ({selectedService.reviewsCount} reviews)</Text>
@@ -458,10 +458,10 @@ export default function CategoryDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#e8f5e9' },
+  mainContainer: { flex: 1, backgroundColor: '#F8FAFC' },
   scrollBody: { flex: 0, backgroundColor: 'transparent' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#e8f5e9' },
-  errorText: { color: '#2e7d32', fontWeight: '600' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
+  errorText: { color: '#2563EB', fontWeight: '600' },
 
   // FIXED COMPONENT ALIGNMENT PROPERTIES
   fixedNavBarRow: {
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.6)',
   },
-  navBarTitle: { fontSize: 18, fontWeight: '700', color: '#1b5e20', marginLeft: 8, flex: 1 },
+  navBarTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginLeft: 8, flex: 1 },
   rightNavIcons: { flexDirection: 'row', gap: 12 },
   iconCircleButton: { padding: 4 },
 
@@ -502,8 +502,8 @@ const styles = StyleSheet.create({
   },
 
   ratingSummaryRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 20 },
-  ratingTextMain: { fontSize: 14, fontWeight: '700', color: '#2e7d32', marginLeft: 4 },
-  bookingCountText: { fontWeight: '400', color: '#4c8c4a' },
+  ratingTextMain: { fontSize: 14, fontWeight: '700', color: '#2563EB', marginLeft: 4 },
+  bookingCountText: { fontWeight: '400', color: '#64748B' },
 
   offersRowContainer: { paddingLeft: 16, marginTop: 14, paddingBottom: 4, gap: 10 },
   offerTagCard: {
@@ -517,8 +517,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.45)',
     ...Platform.select({ android: { elevation: 0 } }),
   },
-  offerTagText: { fontSize: 12, fontWeight: '600', color: '#1b5e20' },
-  mutedText: { fontWeight: '400', color: '#4c8c4a' },
+  offerTagText: { fontSize: 12, fontWeight: '600', color: '#1E293B' },
+  mutedText: { fontWeight: '400', color: '#64748B' },
 
   subCatGridSection: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, paddingTop: 20, gap: 12 },
   subCatGridCard: { width: (width - 52) / 4, alignItems: 'center', marginBottom: 12 },
@@ -547,14 +547,14 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   selectedSubCatCardImageContainer: {
-    backgroundColor: '#2e7d32',
-    borderColor: '#2e7d32',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
-  subCatCardLabel: { fontSize: 11, fontWeight: '600', color: '#4c8c4a', marginTop: 6, textAlign: 'center' },
-  selectedSubCatCardLabel: { color: '#1b5e20', fontWeight: '700' },
+  subCatCardLabel: { fontSize: 11, fontWeight: '600', color: '#64748B', marginTop: 6, textAlign: 'center' },
+  selectedSubCatCardLabel: { color: '#1E293B', fontWeight: '700' },
 
   listSectionHeader: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8 },
-  listSectionTitle: { fontSize: 18, fontWeight: '700', color: '#1b5e20' },
+  listSectionTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
 
   servicesContainer: { paddingBottom: 120, paddingHorizontal: 16, gap: 12 },
   emptyServicesBox: {
@@ -566,17 +566,17 @@ const styles = StyleSheet.create({
   emptyServicesTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#1b5e20',
+    color: '#1E293B',
   },
   emptyServicesText: {
     fontSize: 14,
-    color: '#4c8c4a',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
   },
   retryBtn: {
     marginTop: 12,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -596,14 +596,14 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { elevation: 0 } }),
   },
   serviceRowLeft: { flex: 1, paddingRight: 12 },
-  serviceTitleText: { fontSize: 16, fontWeight: '700', color: '#1b5e20', marginBottom: 4 },
+  serviceTitleText: { fontSize: 16, fontWeight: '700', color: '#1E293B', marginBottom: 4 },
   serviceMetaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  serviceRatingValue: { fontSize: 12, fontWeight: '700', color: '#2e7d32', marginLeft: 4 },
-  serviceReviewsCount: { fontWeight: '400', color: '#4c8c4a' },
+  serviceRatingValue: { fontSize: 12, fontWeight: '700', color: '#2563EB', marginLeft: 4 },
+  serviceReviewsCount: { fontWeight: '400', color: '#64748B' },
   servicePriceValue: { fontSize: 15, fontWeight: '700', color: '#000', marginBottom: 8 },
-  dotSeparator: { color: '#4c8c4a' },
-  bulletItemText: { fontSize: 12, color: '#388e3c', marginBottom: 2, lineHeight: 16 },
-  viewDetailsActionText: { color: '#2e7d32', fontSize: 13, fontWeight: '700', marginTop: 6 },
+  dotSeparator: { color: '#64748B' },
+  bulletItemText: { fontSize: 12, color: '#2563EB', marginBottom: 2, lineHeight: 16 },
+  viewDetailsActionText: { color: '#2563EB', fontSize: 13, fontWeight: '700', marginTop: 6 },
 
   serviceRowRight: { width: 100, height: 100, position: 'relative', justifyContent: 'center', alignItems: 'center' },
   serviceRowImage: { width: 100, height: 100, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.3)' },
@@ -628,11 +628,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignItems: 'center',
   },
-  cleanAddButtonText: { color: '#2e7d32', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 },
+  cleanAddButtonText: { color: '#2563EB', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 },
 
   interactiveCounterBox: {
     flexDirection: 'row',
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)'
   },
-  bottomOfferStripText: { fontSize: 11, color: '#1b5e20', fontWeight: '600' },
+  bottomOfferStripText: { fontSize: 11, color: '#1E293B', fontWeight: '600' },
 
   // Modal Styles
   modalOverlay: {
@@ -708,7 +708,7 @@ closeCircle: {
   height: 220,
   borderRadius: 20,
   marginBottom: 20,
-  backgroundColor: '#c8e6c9',
+  backgroundColor: '#E2E8F0',
 },
 
 modalImageDots: {
@@ -723,18 +723,18 @@ modalImageDot: {
   width: 7,
   height: 7,
   borderRadius: 3.5,
-  backgroundColor: 'rgba(46, 125, 50, 0.25)',
+  backgroundColor: 'rgba(37, 99, 235, 0.2)',
 },
 
 modalImageDotActive: {
-  backgroundColor: '#2e7d32',
+  backgroundColor: '#2563EB',
   width: 18,
 },
 
 modalTitle: {
   fontSize: 24,
   fontWeight: '700',
-  color: '#1b5e20',
+  color: '#1E293B',
   lineHeight: 28,
   marginBottom: 8,
 },
@@ -747,45 +747,45 @@ modalRatingRow: {
 modalRatingText: {
   fontSize: 16,
   fontWeight: '600',
-  color: '#2e7d32',
+  color: '#2563EB',
   marginLeft: 6,
 },
 
 modalReviews: {
   fontWeight: '500',
-  color: '#4c8c4a',
+  color: '#64748B',
   fontSize: 15,
 },
 
 modalPrice: {
   fontSize: 20,
   fontWeight: '700',
-  color: '#1b5e20',
+  color: '#1E293B',
   marginBottom: 20,
 },
 
 modalDuration: {
   fontSize: 16,
   fontWeight: '500',
-  color: '#4c8c4a',
+  color: '#64748B',
 },
 
 modalDivider: {
   height: 1,
-  backgroundColor: 'rgba(46, 125, 50, 0.15)',
+  backgroundColor: 'rgba(37, 99, 235, 0.1)',
   marginVertical: 20,
 },
 
 modalSectionTitle: {
   fontSize: 17,
   fontWeight: '700',
-  color: '#1b5e20',
+  color: '#1E293B',
   marginBottom: 14,
 },
 
 modalBullet: {
   fontSize: 15,
-  color: '#388e3c',
+  color: '#2563EB',
   lineHeight: 22,
   marginBottom: 10,
   paddingLeft: 4,
@@ -803,11 +803,11 @@ modalButtonContainer: {
 },
 
 modalAddBtn: {
-  backgroundColor: '#2e7d32',
+  backgroundColor: '#2563EB',
   borderRadius: 16,
   paddingVertical: 16,
   alignItems: 'center',
-  shadowColor: '#2e7d32',
+  shadowColor: '#2563EB',
   shadowOffset: { width: 0, height: 6 },
   shadowOpacity: 0.3,
   shadowRadius: 12,

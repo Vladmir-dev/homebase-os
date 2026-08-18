@@ -182,7 +182,7 @@ export default function HealthServicesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#1b5e20" />
+          <Ionicons name="chevron-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Health Services</Text>
@@ -197,7 +197,7 @@ export default function HealthServicesScreen() {
             style={[styles.panelTab, activePanel === panel.id && styles.panelTabActive]}
             onPress={() => setActivePanel(panel.id)}
           >
-            <Ionicons name={panel.icon} size={17} color={activePanel === panel.id ? '#fff' : '#2e7d32'} />
+            <Ionicons name={panel.icon} size={17} color={activePanel === panel.id ? '#fff' : '#2563EB'} />
             <Text style={activePanel === panel.id ? styles.panelTabTextActive : styles.panelTabText}>{panel.label}</Text>
           </TouchableOpacity>
         ))}
@@ -205,7 +205,7 @@ export default function HealthServicesScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2e7d32" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Syncing health network...</Text>
         </View>
       ) : (
@@ -254,7 +254,7 @@ export default function HealthServicesScreen() {
               </TouchableOpacity>
               {triage?.summary && (
                 <View style={styles.summaryPanel}>
-                  <Ionicons name="medical-outline" size={18} color="#2e7d32" />
+                  <Ionicons name="medical-outline" size={18} color="#2563EB" />
                   <Text style={styles.summaryText}>{triage.summary}</Text>
                 </View>
               )}
@@ -309,7 +309,7 @@ export default function HealthServicesScreen() {
                   </View>
                   <Text style={styles.itemMeta}>{medicine.pharmacy_name} | Stock {medicine.quantity}</Text>
                   <TouchableOpacity style={styles.secondaryButton} onPress={() => orderMedicine(medicine)} disabled={busyAction === `medicine-${medicine.id}`}>
-                    {busyAction === `medicine-${medicine.id}` ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Request Delivery</Text>}
+                    {busyAction === `medicine-${medicine.id}` ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Request Delivery</Text>}
                   </TouchableOpacity>
                 </View>
               ))}
@@ -326,14 +326,14 @@ export default function HealthServicesScreen() {
                   </View>
                   <Text style={styles.itemMeta}>{doctor.specialization} | UGX {Number(doctor.consultation_fee || 0).toLocaleString()}</Text>
                   <TouchableOpacity style={styles.secondaryButton} onPress={() => bookDoctor(doctor)} disabled={!doctor.available || busyAction === `doctor-${doctor.id}`}>
-                    {busyAction === `doctor-${doctor.id}` ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Book QR Ticket</Text>}
+                    {busyAction === `doctor-${doctor.id}` ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Book QR Ticket</Text>}
                   </TouchableOpacity>
                 </View>
               ))}
               <Text style={styles.sectionTitle}>My Tickets ({bookings.length})</Text>
               {bookings.slice(0, 5).map((booking) => (
                 <View key={booking.id} style={styles.ticketCard}>
-                  <Ionicons name="qr-code-outline" size={30} color="#2e7d32" />
+                  <Ionicons name="qr-code-outline" size={30} color="#2563EB" />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.itemTitle}>{booking.booking_type}</Text>
                     <Text style={styles.itemMeta}>{booking.status} | Ticket HBH-{booking.id}</Text>
@@ -408,22 +408,22 @@ export default function HealthServicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#e8f5e9' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   headerCopy: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '800', color: '#1b5e20' },
-  subtitle: { fontSize: 13, fontWeight: '600', color: '#4c8c4a', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800', color: '#1E293B' },
+  subtitle: { fontSize: 13, fontWeight: '600', color: '#64748B', marginTop: 2 },
   panelTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 14 },
   panelTab: { flex: 1, minHeight: 42, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 3 },
-  panelTabActive: { backgroundColor: '#2e7d32' },
-  panelTabText: { color: '#2e7d32', fontSize: 11, fontWeight: '800' },
+  panelTabActive: { backgroundColor: '#2563EB' },
+  panelTabText: { color: '#2563EB', fontSize: 11, fontWeight: '800' },
   panelTabTextActive: { color: '#fff', fontSize: 11, fontWeight: '800' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#2e7d32', marginTop: 8, fontWeight: '700' },
+  loadingText: { color: '#2563EB', marginTop: 8, fontWeight: '700' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 36 },
   severityBand: { borderRadius: 8, padding: 16, marginBottom: 14 },
-  severity_low: { backgroundColor: '#2e7d32' },
+  severity_low: { backgroundColor: '#2563EB' },
   severity_medium: { backgroundColor: '#b26a00' },
   severity_high: { backgroundColor: '#c62828' },
   severity_emergency: { backgroundColor: '#7b1b1b' },
@@ -431,34 +431,34 @@ const styles = StyleSheet.create({
   severityValue: { color: '#fff', fontSize: 24, fontWeight: '800', marginTop: 3 },
   severityRisk: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700', marginTop: 4 },
   formRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  summaryPanel: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(46,125,50,0.18)' },
-  summaryText: { color: '#1b5e20', fontSize: 13, fontWeight: '700', flex: 1 },
+  summaryPanel: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235,0.18)' },
+  summaryText: { color: '#1E293B', fontSize: 13, fontWeight: '700', flex: 1 },
   providerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  providerChip: { backgroundColor: '#e8f5e9', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
-  providerChipText: { color: '#2e7d32', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  providerChip: { backgroundColor: '#F8FAFC', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  providerChipText: { color: '#2563EB', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
   cancelTicketButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: '#ffebee' },
   cancelTicketText: { color: '#c62828', fontSize: 11, fontWeight: '800' },
-  emptyText: { color: '#4c8c4a', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },
+  emptyText: { color: '#64748B', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },
   symptomGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  symptomChip: { backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(46,125,50,0.14)' },
-  symptomChipActive: { backgroundColor: '#2e7d32' },
-  symptomText: { color: '#2e7d32', fontSize: 13, fontWeight: '800', textTransform: 'capitalize' },
+  symptomChip: { backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235,0.14)' },
+  symptomChipActive: { backgroundColor: '#2563EB' },
+  symptomText: { color: '#2563EB', fontSize: 13, fontWeight: '800', textTransform: 'capitalize' },
   symptomTextActive: { color: '#fff', fontSize: 13, fontWeight: '800', textTransform: 'capitalize' },
-  primaryButton: { minHeight: 46, backgroundColor: '#2e7d32', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 14 },
+  primaryButton: { minHeight: 46, backgroundColor: '#2563EB', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 14 },
   primaryButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  sectionTitle: { color: '#1b5e20', fontSize: 16, fontWeight: '800', marginBottom: 10, marginTop: 4 },
-  itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(46,125,50,0.12)' },
+  sectionTitle: { color: '#1E293B', fontSize: 16, fontWeight: '800', marginBottom: 10, marginTop: 4 },
+  itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235,0.12)' },
   itemHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 6 },
-  itemTitle: { color: '#1b5e20', fontSize: 15, fontWeight: '800', flex: 1, textTransform: 'capitalize' },
-  itemBadge: { color: '#2e7d32', backgroundColor: '#e8f5e9', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
-  itemMeta: { color: '#4c8c4a', fontSize: 12, lineHeight: 17 },
-  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#2e7d32', fontSize: 13, fontWeight: '800' },
+  itemTitle: { color: '#1E293B', fontSize: 15, fontWeight: '800', flex: 1, textTransform: 'capitalize' },
+  itemBadge: { color: '#2563EB', backgroundColor: '#F8FAFC', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
+  itemMeta: { color: '#64748B', fontSize: 12, lineHeight: 17 },
+  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  secondaryButtonText: { color: '#2563EB', fontSize: 13, fontWeight: '800' },
   ticketCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10 },
   sosPanel: { backgroundColor: '#c62828', borderRadius: 8, padding: 18, alignItems: 'center', marginBottom: 14 },
   sosTitle: { color: '#fff', fontSize: 20, fontWeight: '800', marginTop: 8 },
   sosText: { color: 'rgba(255,255,255,0.86)', textAlign: 'center', fontSize: 13, lineHeight: 18, marginTop: 4 },
-  input: { minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1b5e20', fontWeight: '700', marginBottom: 12 },
+  input: { minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1E293B', fontWeight: '700', marginBottom: 12 },
   sosButton: { minHeight: 50, borderRadius: 8, backgroundColor: '#c62828', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
   sosButtonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

@@ -5,7 +5,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 const TABS = [
   { label: 'Home', icon: 'home-outline' as const, route: '/' },
   { label: 'Cart', icon: 'cart-outline' as const, route: '/cart' },
-  { label: 'Account', icon: 'person-outline' as const, route: '/account' },
+  { label: 'Profile', icon: 'person-outline' as const, route: '/account' },
 ];
 
 export default function TabLayout() {
@@ -28,11 +28,11 @@ export default function TabLayout() {
               style={styles.tabNode}
               onPress={() => router.replace(tab.route as any)}
             >
-              <Ionicons name={tab.icon} size={22} color={active ? '#2e7d32' : '#757575'} />
+              <Ionicons name={tab.icon} size={22} color={active ? '#2563EB' : '#94A3B8'} />
               <Text
                 style={[
                   styles.tabLabel,
-                  active && { color: '#2e7d32', fontWeight: '700' },
+                  active && { color: '#2563EB', fontWeight: '700' },
                 ]}
               >
                 {tab.label}
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 64,
     borderTopWidth: 1,
-    borderColor: '#f5f5f5',
+    borderColor: '#F1F5F9',
     backgroundColor: '#fff',
     justifyContent: 'space-around',
     alignItems: 'center',
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   tabNode: { alignItems: 'center', justifyContent: 'center' },
   tabLabel: {
     fontSize: 11,
-    color: '#757575',
+    color: '#94A3B8',
     marginTop: 4,
     fontWeight: '500',
   },

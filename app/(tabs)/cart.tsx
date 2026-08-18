@@ -12,7 +12,7 @@ export default function CartScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#1b5e20" />
+          <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
         <View style={{ width: 24 }} />
@@ -73,7 +73,7 @@ export default function CartScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#e8f5e9' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -83,19 +83,19 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1b5e20' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1E293B' },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyImage: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#c8e6c9',
+    backgroundColor: '#E2E8F0',
   },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1b5e20', marginTop: 16 },
-  emptySub: { fontSize: 14, color: '#4c8c4a', marginTop: 6 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginTop: 16 },
+  emptySub: { fontSize: 14, color: '#64748B', marginTop: 6 },
   browseBtn: {
     marginTop: 24,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 12,
@@ -112,14 +112,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.75)',
   },
-  cartImage: { width: 60, height: 60, borderRadius: 12, backgroundColor: '#c8e6c9' },
+  cartImage: { width: 60, height: 60, borderRadius: 12, backgroundColor: '#E2E8F0' },
   cartInfo: { flex: 1, marginLeft: 12 },
-  cartName: { fontSize: 15, fontWeight: '600', color: '#1b5e20' },
+  cartName: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
   cartPrice: { fontSize: 14, fontWeight: '700', color: '#000', marginTop: 4 },
   counterBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     borderRadius: 8,
     paddingVertical: 4,
   },
@@ -132,10 +132,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  totalLabel: { fontSize: 18, fontWeight: '600', color: '#1b5e20' },
+  totalLabel: { fontSize: 18, fontWeight: '600', color: '#1E293B' },
   totalValue: { fontSize: 18, fontWeight: '700', color: '#000' },
   checkoutBtn: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',

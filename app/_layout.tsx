@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
 
   cartBadge: {
-    backgroundColor: "#d32f2f", // Vibrant red for attention
+    backgroundColor: "#2563EB",
     borderRadius: 12,
     minWidth: 22,
     height: 22,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
 
   cartTotalText: {
-    color: "#1b5e20",
+    color: "#1E293B",
     fontSize: 15,
     fontWeight: "700",
     marginLeft: 4,
@@ -128,7 +128,7 @@ function CartBadge() {
         onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
       >
-        <Ionicons name="cart" size={24} color="#1b5e20" />
+        <Ionicons name="cart" size={24} color="#2563EB" />
 
         <View style={styles.cartBadge}>
           <Text style={styles.cartBadgeText}>{cartCount}</Text>

@@ -582,9 +582,10 @@ class ApiClient {
     description: string;
     priority?: "low" | "medium" | "high" | "emergency";
   }) {
+    const { asset_id, ...rest } = payload;
     return this.request("/maintenance/", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...rest, asset: asset_id }),
     });
   }
 
@@ -953,6 +954,86 @@ class ApiClient {
     return this.request("/reports/", {
       method: "POST",
       body: JSON.stringify({ ...rest, asset: asset_id }),
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  QUOTATION & JOB LIFECYCLE ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getQuotations() {
+    return this.request("/quotations/");
+  }
+
+  async getQuotationById(id: number | string) {
+    return this.request(`/quotations/${id}/`);
+  }
+
+  async createQuotation(payload: {
+    booking_id: number;
+    notes?: string;
+    items: Array<{
+      item_type: 'labour' | 'material' | 'other';
+      description: string;
+      quantity?: number;
+      unit?: string;
+      unit_price: number;
+      supplier?: string;
+    }>;
+  }) {
+    return this.request("/quotations/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async submitQuotation(quotationId: number | string) {
+    return this.request(`/quotations/${quotationId}/submit/`, {
+      method: "POST",
+    });
+  }
+
+  async approveQuotation(quotationId: number | string, notes?: string) {
+    return this.request(`/quotations/${quotationId}/approve/`, {
+      method: "POST",
+      body: JSON.stringify({ notes: notes || '' }),
+    });
+  }
+
+  async rejectQuotation(quotationId: number | string, notes?: string) {
+    return this.request(`/quotations/${quotationId}/reject/`, {
+      method: "POST",
+      body: JSON.stringify({ notes: notes || '' }),
+    });
+  }
+
+  async getJobSteps(bookingId?: number | string) {
+    const endpoint = bookingId
+      ? `/job-steps/?booking=${bookingId}`
+      : '/job-steps/';
+    return this.request(endpoint);
+  }
+
+  async startJobStep(stepId: number | string, notes?: string) {
+    return this.request(`/job-steps/${stepId}/start-step/`, {
+      method: "POST",
+      body: JSON.stringify({ notes: notes || '' }),
+    });
+  }
+
+  async completeJobStep(stepId: number | string, notes?: string) {
+    return this.request(`/job-steps/${stepId}/complete-step/`, {
+      method: "POST",
+      body: JSON.stringify({ notes: notes || '' }),
+    });
+  }
+
+  async advanceBookingStep(
+    bookingId: number | string,
+    action: 'confirm' | 'start' | 'complete' | 'cancel' | 'dispute',
+  ) {
+    return this.request(`/bookings/${bookingId}/${action}/`, {
+      method: "POST",
     });
   }
 }

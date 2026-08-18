@@ -253,25 +253,25 @@ export default function MyServicesScreen() {
     <View style={styles.container}>
       <View style={styles.navBar}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconCircleButton}>
-          <Ionicons name="arrow-back" size={22} color="#1b5e20" />
+          <Ionicons name="arrow-back" size={22} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.navTitle} numberOfLines={1}>
           My Provided Services
         </Text>
         <View style={styles.navRight}>
           <TouchableOpacity onPress={loadServices} style={styles.iconCircleButton}>
-            <Ionicons name="refresh" size={20} color="#1b5e20" />
+            <Ionicons name="refresh" size={20} color="#1E293B" />
           </TouchableOpacity>
         </View>
       </View>
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#2e7d32" />
+          <ActivityIndicator size="large" color="#2563EB" />
         </View>
       ) : services.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="briefcase-outline" size={48} color="#2e7d32" />
+          <Ionicons name="briefcase-outline" size={48} color="#2563EB" />
           <Text style={styles.emptyTitle}>No services yet</Text>
           <Text style={styles.emptyText}>
             Create a service like a cleaning service with photos to start
@@ -336,7 +336,7 @@ export default function MyServicesScreen() {
                   style={styles.cardActionBtn}
                   onPress={() => openEditModal(service)}
                 >
-                  <Ionicons name="create-outline" size={18} color="#2e7d32" />
+                  <Ionicons name="create-outline" size={18} color="#2563EB" />
                   <Text style={styles.cardActionText}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -477,7 +477,7 @@ export default function MyServicesScreen() {
 
               <Text style={styles.fieldLabel}>Photos</Text>
               <TouchableOpacity style={styles.pickPhotosBtn} onPress={pickImages}>
-                <Ionicons name="images-outline" size={20} color="#2e7d32" />
+                <Ionicons name="images-outline" size={20} color="#2563EB" />
                 <Text style={styles.pickPhotosText}>Pick photos from library</Text>
               </TouchableOpacity>
 
@@ -585,7 +585,7 @@ export default function MyServicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e8f5e9" },
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
   navBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
   },
   navRight: { flexDirection: "row", gap: 8 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 10,
   },
-  emptyTitle: { fontSize: 20, fontWeight: "800", color: "#1b5e20" },
+  emptyTitle: { fontSize: 20, fontWeight: "800", color: "#1E293B" },
   emptyText: {
     fontSize: 14,
     color: "#4a6b4a",
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "rgba(46,125,50,0.12)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
   },
   imageStrip: { flexDirection: "row", marginBottom: 12 },
   imageWrap: { marginRight: 10 },
@@ -656,9 +656,9 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 12,
   },
-  noImagesText: { fontSize: 12, color: "#4c8c4a", fontWeight: "600" },
+  noImagesText: { fontSize: 12, color: "#64748B", fontWeight: "600" },
   serviceInfo: { paddingHorizontal: 2 },
-  serviceName: { fontSize: 16, fontWeight: "800", color: "#1b5e20" },
+  serviceName: { fontSize: 16, fontWeight: "800", color: "#1E293B" },
   serviceMeta: { fontSize: 13, color: "#4a6b4a", marginTop: 4 },
   serviceStatsRow: {
     flexDirection: "row",
@@ -671,8 +671,8 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     fontSize: 11,
     fontWeight: "800",
-    color: "#2e7d32",
-    backgroundColor: "#e8f5e9",
+    color: "#2563EB",
+    backgroundColor: "#F8FAFC",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "rgba(46,125,50,0.1)",
+    borderTopColor: "rgba(37, 99, 235, 0.06)",
     paddingTop: 12,
   },
   cardActionBtn: {
@@ -693,9 +693,9 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
   },
-  cardActionText: { color: "#2e7d32", fontWeight: "700", fontSize: 13 },
+  cardActionText: { color: "#2563EB", fontWeight: "700", fontSize: 13 },
   deleteBtn: { backgroundColor: "#ffebee" },
   deleteText: { color: "#d32f2f" },
   fab: {
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderRadius: 30,
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     textAlign: "center",
     marginBottom: 14,
   },
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     borderColor: "#c7dac9",
     backgroundColor: "#f4faf4",
   },
-  chipActive: { backgroundColor: "#2e7d32", borderColor: "#2e7d32" },
+  chipActive: { backgroundColor: "#2563EB", borderColor: "#2563EB" },
   chipText: { fontSize: 12, fontWeight: "700", color: "#4a6b4a" },
   chipTextActive: { color: "#fff" },
   pickPhotosBtn: {
@@ -784,13 +784,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: "#2e7d32",
+    borderColor: "#2563EB",
     borderStyle: "dashed",
     borderRadius: 12,
     paddingVertical: 14,
     backgroundColor: "#f4faf4",
   },
-  pickPhotosText: { color: "#2e7d32", fontWeight: "700", fontSize: 13 },
+  pickPhotosText: { color: "#2563EB", fontWeight: "700", fontSize: 13 },
   previewRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   previewWrap: { position: "relative" },
   previewThumb: { width: 76, height: 76, borderRadius: 10 },
@@ -815,15 +815,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
     alignItems: "center",
   },
-  cancelBtnText: { fontSize: 15, fontWeight: "700", color: "#2e7d32" },
+  cancelBtnText: { fontSize: 15, fontWeight: "700", color: "#2563EB" },
   saveBtn: {
     flex: 1.4,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     alignItems: "center",
   },
   saveBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     fontSize: 14,
-    color: "#4c8c4a",
+    color: "#64748B",
     textAlign: "center",
     lineHeight: 20,
     marginTop: 8,

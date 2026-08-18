@@ -316,7 +316,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2e7d32" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text style={styles.loadingText}>Syncing Portfolio Ledger...</Text>
       </View>
     );
@@ -359,7 +359,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
         <View style={styles.portfolioSummaryGrid}>
           <View style={styles.summaryMiniCard}>
             <Text style={styles.summaryLabel}>Ledger Balance</Text>
-            <Text style={[styles.summaryValue, { color: "#2e7d32" }]}>
+            <Text style={[styles.summaryValue, { color: "#2563EB" }]}>
               UGX {ledgerBalance.toLocaleString()}
             </Text>
             <Text style={styles.summarySubtext}>Escrow-Custodied Balance</Text>
@@ -367,7 +367,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
 
           <View style={styles.summaryMiniCard}>
             <Text style={styles.summaryLabel}>Yield Collected</Text>
-            <Text style={[styles.summaryValue, { color: "#2e7d32" }]}>
+            <Text style={[styles.summaryValue, { color: "#2563EB" }]}>
               UGX {yieldCollected.toLocaleString()}
             </Text>
             <Text style={styles.summarySubtext}>
@@ -398,21 +398,21 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
           style={styles.previewButton}
           onPress={() => setPreviewTenantView(true)}
         >
-          <Ionicons name="eye-outline" size={17} color="#1b5e20" />
+          <Ionicons name="eye-outline" size={17} color="#1E293B" />
           <Text style={styles.auditActionText}>
             Preview Tenant View (what the renter sees)
           </Text>
-          <Ionicons name="chevron-forward" size={17} color="#4c8c4a" />
+          <Ionicons name="chevron-forward" size={17} color="#64748B" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.auditActionButton}
           onPress={() => router.push("/evidence-audit" as any)}
         >
-          <Ionicons name="shield-checkmark-outline" size={17} color="#1b5e20" />
+          <Ionicons name="shield-checkmark-outline" size={17} color="#1E293B" />
           <Text style={styles.auditActionText}>
             Open Evidence Chain Auditor
           </Text>
-          <Ionicons name="chevron-forward" size={17} color="#4c8c4a" />
+          <Ionicons name="chevron-forward" size={17} color="#64748B" />
         </TouchableOpacity>
         <View style={styles.reportGrid}>
           {(
@@ -432,9 +432,9 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
               onPress={() => handleGenerateReport(type)}
             >
               {generatingReport === type ? (
-                <ActivityIndicator color="#2e7d32" />
+                <ActivityIndicator color="#2563EB" />
               ) : (
-                <Ionicons name={icon} size={18} color="#2e7d32" />
+                <Ionicons name={icon} size={18} color="#2563EB" />
               )}
               <Text style={styles.reportButtonText}>{label}</Text>
             </TouchableOpacity>
@@ -461,7 +461,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                   <Text
                     style={[
                       styles.summaryValue,
-                      { fontSize: 15, color: isCredit ? "#2e7d32" : "#b3261e" },
+                      { fontSize: 15, color: isCredit ? "#2563EB" : "#DC2626" },
                     ]}
                   >
                     {isCredit ? "+" : "−"} UGX {amount.toLocaleString()}
@@ -531,7 +531,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                     {
                       width: lease.status === "active" ? "100%" : "50%",
                       backgroundColor:
-                        lease.status === "active" ? "#2e7d32" : "#d32f2f",
+                        lease.status === "active" ? "#2563EB" : "#EF4444",
                     },
                   ]}
                 />
@@ -796,7 +796,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
       <View style={styles.container}>
         {previewTenantView && (
           <View style={styles.previewBanner}>
-            <Ionicons name="eye-outline" size={16} color="#1b5e20" />
+            <Ionicons name="eye-outline" size={16} color="#1E293B" />
             <Text style={styles.previewBannerText}>
               Previewing the tenant view. You are signed in as the landlord.
             </Text>
@@ -851,7 +851,7 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                   <View
                     style={[
                       styles.healthBarFill,
-                      { width: "80%", backgroundColor: "#2e7d32" },
+                      { width: "80%", backgroundColor: "#2563EB" },
                     ]}
                   />
                 </View>
@@ -1070,11 +1070,11 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 16, marginTop: 4 },
   loadingContainer: { padding: 32, alignItems: "center" },
-  loadingText: { marginTop: 8, color: "#2e7d32", fontWeight: "600" },
+  loadingText: { marginTop: 8, color: "#2563EB", fontWeight: "600" },
   sectionHeading: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 12,
     marginTop: 16,
   },
@@ -1086,7 +1086,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.12)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
   },
   summaryLabel: {
     fontSize: 11,
@@ -1097,10 +1097,10 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginVertical: 4,
   },
-  summarySubtext: { fontSize: 11, color: "#4c8c4a" },
+  summarySubtext: { fontSize: 11, color: "#64748B" },
 
   glassPropertyCard: {
     backgroundColor: "#fff",
@@ -1108,7 +1108,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.12)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
   },
   cardHeader: {
     flexDirection: "row",
@@ -1116,25 +1116,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  unitTitle: { fontSize: 16, fontWeight: "700", color: "#1b5e20" },
-  tenantLabelHeading: { fontSize: 14, fontWeight: "600", color: "#4c8c4a" },
+  unitTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
+  tenantLabelHeading: { fontSize: 14, fontWeight: "600", color: "#64748B" },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badgePaid: { backgroundColor: "#e8f5e9" },
+  badgePaid: { backgroundColor: "#F8FAFC" },
   badgeArrears: { backgroundColor: "#ffebee" },
-  badgeTextPaid: { color: "#2e7d32", fontSize: 11, fontWeight: "700" },
+  badgeTextPaid: { color: "#2563EB", fontSize: 11, fontWeight: "700" },
   badgeTextArrears: { color: "#c62828", fontSize: 11, fontWeight: "700" },
 
   tenantNameText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#2e7d32",
+    color: "#2563EB",
     marginBottom: 2,
   },
   metaText: { fontSize: 13, color: "#6b8c70", marginBottom: 12 },
   invoiceAmount: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 4,
   },
   dueDateText: {
@@ -1146,7 +1146,7 @@ const styles = StyleSheet.create({
 
   healthBarContainer: {
     height: 6,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
     borderRadius: 3,
     overflow: "hidden",
     marginBottom: 12,
@@ -1155,7 +1155,7 @@ const styles = StyleSheet.create({
 
   verticalButtonGroup: { gap: 8 },
   primaryActionButton: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -1172,10 +1172,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.2)",
+    borderColor: "rgba(37, 99, 235, 0.1)",
   },
   secondaryGlassButtonLongText: {
-    color: "#2e7d32",
+    color: "#2563EB",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -1187,14 +1187,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.16)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
   auditActionText: {
     flex: 1,
-    color: "#1b5e20",
+    color: "#1E293B",
     fontSize: 14,
     fontWeight: "800",
   },
@@ -1206,14 +1206,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.16)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 8,
     gap: 6,
   },
   reportButtonText: {
-    color: "#1b5e20",
+    color: "#1E293B",
     fontSize: 11,
     fontWeight: "800",
     textAlign: "center",
@@ -1233,15 +1233,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.18)",
+    borderColor: "rgba(37, 99, 235, 0.1)",
   },
   secondaryGlassButtonText: {
-    color: "#2e7d32",
+    color: "#2563EB",
     fontSize: 13,
     fontWeight: "700",
   },
   primaryActionButtonSmall: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -1259,7 +1259,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.16)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
   },
   utilityToggle: { flexDirection: "row", gap: 8, marginBottom: 10 },
   utilityToggleButton: {
@@ -1270,8 +1270,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  utilityToggleButtonActive: { backgroundColor: "#2e7d32" },
-  utilityToggleText: { color: "#2e7d32", fontWeight: "800", fontSize: 12 },
+  utilityToggleButtonActive: { backgroundColor: "#2563EB" },
+  utilityToggleText: { color: "#2563EB", fontWeight: "800", fontSize: 12 },
   utilityToggleTextActive: { color: "#fff", fontWeight: "800", fontSize: 12 },
   utilityInputRow: { flexDirection: "row", gap: 8 },
   utilityInput: {
@@ -1280,14 +1280,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f1",
     borderRadius: 8,
     paddingHorizontal: 12,
-    color: "#1b5e20",
+    color: "#1E293B",
     fontWeight: "700",
   },
   utilitySubmit: {
     width: 46,
     height: 44,
     borderRadius: 8,
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1315,8 +1315,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
-  maintTitle: { fontSize: 14, fontWeight: "700", color: "#1b5e20" },
-  maintStatus: { fontSize: 11, fontWeight: "700", color: "#2e7d32" },
+  maintTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
+  maintStatus: { fontSize: 11, fontWeight: "700", color: "#2563EB" },
   maintDesc: { fontSize: 12, color: "#666", marginTop: 4 },
 
   modalOverlay: {
@@ -1329,7 +1329,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 16,
   },
   modalInput: {
@@ -1352,7 +1352,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "rgba(46, 125, 50, 0.16)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
     borderStyle: "dashed",
     flexDirection: "row",
     alignItems: "center",
@@ -1362,14 +1362,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
     borderRadius: 10,
     padding: 12,
     marginTop: 12,
   },
-  previewBannerText: { flex: 1, color: "#1b5e20", fontSize: 12 },
+  previewBannerText: { flex: 1, color: "#1E293B", fontSize: 12 },
   previewBannerExit: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -1399,7 +1399,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
     borderRadius: 12,
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
   },
   modalSubmitText: { color: "#fff", fontWeight: "700" },
 });

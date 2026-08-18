@@ -169,7 +169,7 @@ export default function EvidenceAuditScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#1b5e20" />
+          <Ionicons name="chevron-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Evidence Audit</Text>
@@ -179,7 +179,7 @@ export default function EvidenceAuditScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2e7d32" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Loading evidence chain...</Text>
         </View>
       ) : (
@@ -187,7 +187,7 @@ export default function EvidenceAuditScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => loadEvidence(true)} tintColor="#2e7d32" />
+            <RefreshControl refreshing={refreshing} onRefresh={() => loadEvidence(true)} tintColor="#2563EB" />
           }
         >
           <View style={styles.summaryBand}>
@@ -276,7 +276,7 @@ export default function EvidenceAuditScreen() {
                       color={
                         brokenSet.has(record.id) || !record.curr_hash
                           ? '#b3261e'
-                          : '#2e7d32'
+                          : '#2563EB'
                       }
                     />
                     <Text
@@ -295,7 +295,7 @@ export default function EvidenceAuditScreen() {
                     <Ionicons
                       name={record.is_verified ? 'checkmark-circle' : 'time-outline'}
                       size={14}
-                      color={record.is_verified ? '#2e7d32' : '#9a6b00'}
+                      color={record.is_verified ? '#2563EB' : '#9a6b00'}
                     />
                     <Text style={record.is_verified ? styles.verifyTextValid : styles.verifyTextOpen}>
                       {record.is_verified ? 'Verified' : 'Open'}
@@ -319,15 +319,15 @@ export default function EvidenceAuditScreen() {
 
               <View style={styles.metaGrid}>
                 <View style={styles.metaItem}>
-                  <Ionicons name="calendar-outline" size={15} color="#4c8c4a" />
+                  <Ionicons name="calendar-outline" size={15} color="#64748B" />
                   <Text style={styles.metaText}>{formatDate(record.timestamp || record.created_at)}</Text>
                 </View>
                 <View style={styles.metaItem}>
-                  <Ionicons name="location-outline" size={15} color="#4c8c4a" />
+                  <Ionicons name="location-outline" size={15} color="#64748B" />
                   <Text style={styles.metaText}>{record.gps_coordinates || 'GPS not attached'}</Text>
                 </View>
                 <View style={styles.metaItem}>
-                  <Ionicons name="person-outline" size={15} color="#4c8c4a" />
+                  <Ionicons name="person-outline" size={15} color="#64748B" />
                   <Text style={styles.metaText}>{record.user_email || 'Unknown uploader'}</Text>
                 </View>
               </View>
@@ -367,7 +367,7 @@ export default function EvidenceAuditScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#e8f5e9' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
     paddingTop: 54,
     paddingHorizontal: 20,
@@ -385,21 +385,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerCopy: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '800', color: '#1b5e20' },
-  subtitle: { fontSize: 13, fontWeight: '600', color: '#4c8c4a', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800', color: '#1E293B' },
+  subtitle: { fontSize: 13, fontWeight: '600', color: '#64748B', marginTop: 2 },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { marginTop: 10, color: '#2e7d32', fontWeight: '700' },
+  loadingText: { marginTop: 10, color: '#2563EB', fontWeight: '700' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 36 },
   summaryBand: {
     flexDirection: 'row',
-    backgroundColor: '#1b5e20',
+    backgroundColor: '#1E293B',
     borderRadius: 8,
     paddingVertical: 16,
     marginBottom: 14,
   },
   summaryMetric: { flex: 1, alignItems: 'center' },
   metricValue: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  metricLabel: { color: '#c8e6c9', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginTop: 3 },
+  metricLabel: { color: '#E2E8F0', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginTop: 3 },
   statusPanel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -407,39 +407,39 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(46,125,50,0.12)',
+    borderColor: 'rgba(37, 99, 235,0.12)',
     marginBottom: 14,
   },
   statusIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  statusIconValid: { backgroundColor: '#2e7d32' },
+  statusIconValid: { backgroundColor: '#2563EB' },
   statusIconWarning: { backgroundColor: '#b3261e' },
   statusTextWrap: { flex: 1 },
-  statusTitle: { color: '#1b5e20', fontSize: 15, fontWeight: '800' },
-  statusText: { color: '#4c8c4a', fontSize: 12, lineHeight: 17, marginTop: 3 },
+  statusTitle: { color: '#1E293B', fontSize: 15, fontWeight: '800' },
+  statusText: { color: '#64748B', fontSize: 12, lineHeight: 17, marginTop: 3 },
   recordCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(46,125,50,0.12)',
+    borderColor: 'rgba(37, 99, 235,0.12)',
   },
   recordTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  recordType: { fontSize: 16, fontWeight: '800', color: '#1b5e20', textTransform: 'capitalize' },
-  recordAsset: { fontSize: 12, color: '#4c8c4a', marginTop: 2, fontWeight: '600' },
+  recordType: { fontSize: 16, fontWeight: '800', color: '#1E293B', textTransform: 'capitalize' },
+  recordAsset: { fontSize: 12, color: '#64748B', marginTop: 2, fontWeight: '600' },
   verifyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
-  verifyBadgeValid: { backgroundColor: '#e8f5e9' },
+  verifyBadgeValid: { backgroundColor: '#F8FAFC' },
   verifyBadgeOpen: { backgroundColor: '#fff8e1' },
   verifyBadgeBroken: { backgroundColor: '#fdecea' },
-  verifyTextValid: { color: '#2e7d32', fontSize: 11, fontWeight: '800' },
+  verifyTextValid: { color: '#2563EB', fontSize: 11, fontWeight: '800' },
   verifyTextOpen: { color: '#9a6b00', fontSize: 11, fontWeight: '800' },
   verifyTextBroken: { color: '#b3261e', fontSize: 11, fontWeight: '800' },
   badgeRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' },
@@ -447,25 +447,25 @@ const styles = StyleSheet.create({
   hashGrid: { flexDirection: 'row', gap: 10, marginTop: 14 },
   hashCell: { flex: 1, backgroundColor: '#f4f8f5', borderRadius: 8, padding: 10 },
   hashLabel: { color: '#6b8c70', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginBottom: 5 },
-  hashValue: { color: '#1b5e20', fontSize: 12, fontWeight: '700' },
+  hashValue: { color: '#1E293B', fontSize: 12, fontWeight: '700' },
   metaGrid: { gap: 7, marginTop: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  metaText: { color: '#4c8c4a', fontSize: 12, flex: 1 },
+  metaText: { color: '#64748B', fontSize: 12, flex: 1 },
   chainRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
   chainDot: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chainIndex: { color: '#2e7d32', fontSize: 12, fontWeight: '800' },
+  chainIndex: { color: '#2563EB', fontSize: 12, fontWeight: '800' },
   chainLine: { width: 26, height: 2, backgroundColor: '#a5d6a7', marginHorizontal: 8 },
-  chainCopy: { color: '#4c8c4a', fontSize: 12, fontWeight: '600', flex: 1 },
+  chainCopy: { color: '#64748B', fontSize: 12, fontWeight: '600', flex: 1 },
   verifyButton: {
     marginTop: 14,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     borderRadius: 8,
     minHeight: 44,
     alignItems: 'center',
