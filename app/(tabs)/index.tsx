@@ -163,6 +163,21 @@ export default function HomeScreen() {
                 <Text style={styles.commandButtonText}>Provider Bookings</Text>
                 <Ionicons name="chevron-forward" size={18} color="#64748B" />
               </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/wallet' as any)}>
+                <Ionicons name="wallet-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>My Wallet</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/disputes' as any)}>
+                <Ionicons name="alert-circle-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Disputes</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.commandButton} onPress={() => router.push('/suppliers' as any)}>
+                <Ionicons name="business-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Suppliers</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
                 {displayCategories.length > 0 ? (
                   displayCategories.map((category) => (

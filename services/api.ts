@@ -1036,6 +1036,216 @@ class ApiClient {
       method: "POST",
     });
   }
+
+  // ═══════════════════════════════════════════════════════════
+  //  WALLET ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getMyWallet() {
+    return this.request("/wallets/my-wallet/");
+  }
+
+  async holdWalletFunds(
+    walletId: number | string,
+    amount: number,
+    description?: string,
+  ) {
+    return this.request(`/wallets/${walletId}/hold/`, {
+      method: "POST",
+      body: JSON.stringify({ amount, description: description || "Escrow hold" }),
+    });
+  }
+
+  async releaseWalletFunds(
+    walletId: number | string,
+    amount: number,
+    description?: string,
+  ) {
+    return this.request(`/wallets/${walletId}/release/`, {
+      method: "POST",
+      body: JSON.stringify({ amount, description: description || "Escrow release" }),
+    });
+  }
+
+  async getWalletTransactions(walletId: number | string) {
+    return this.request(`/wallets/${walletId}/transactions/`);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  DISPUTE ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getDisputes() {
+    return this.request("/disputes/");
+  }
+
+  async getDisputeById(id: number | string) {
+    return this.request(`/disputes/${id}/`);
+  }
+
+  async createDispute(payload: {
+    transaction: number;
+    booking?: number;
+    against?: number;
+    dispute_type: string;
+    subject: string;
+    description: string;
+  }) {
+    return this.request("/disputes/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async resolveDispute(
+    disputeId: number | string,
+    resolution: string,
+    notes?: string,
+    refundAmount?: number,
+  ) {
+    return this.request(`/disputes/${disputeId}/resolve/`, {
+      method: "POST",
+      body: JSON.stringify({
+        resolution,
+        notes: notes || "",
+        refund_amount: refundAmount || 0,
+      }),
+    });
+  }
+
+  async addDisputeMessage(
+    disputeId: number | string,
+    message: string,
+    evidenceUrls?: string[],
+  ) {
+    return this.request(`/disputes/${disputeId}/add-message/`, {
+      method: "POST",
+      body: JSON.stringify({ message, evidence_urls: evidenceUrls || [] }),
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  SUPPLIER ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getSuppliers(params?: { q?: string; category?: number | string }) {
+    const query = new URLSearchParams();
+    if (params?.q) query.set("q", params.q);
+    if (params?.category !== undefined) query.set("category", String(params.category));
+    const qs = query.toString();
+    return this.request(qs ? `/suppliers/search/?${qs}` : "/suppliers/");
+  }
+
+  async createSupplier(payload: {
+    business_name: string;
+    description?: string;
+    phone_number?: string;
+    location?: string;
+    categories?: number[];
+  }) {
+    return this.request("/suppliers/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  MATERIAL VERIFICATION ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getMaterialVerifications() {
+    return this.request("/material-verifications/");
+  }
+
+  async createMaterialVerification(payload: {
+    delivery: number;
+    status?: string;
+    quantity_accepted?: number;
+    quantity_rejected?: number;
+    rejection_reason?: string;
+    quality_notes?: string;
+  }) {
+    return this.request("/material-verifications/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async approveMaterialVerification(
+    verificationId: number | string,
+    quantityAccepted?: number,
+    notes?: string,
+  ) {
+    return this.request(`/material-verifications/${verificationId}/approve/`, {
+      method: "POST",
+      body: JSON.stringify({
+        quantity_accepted: quantityAccepted,
+        notes: notes || "",
+      }),
+    });
+  }
+
+  async rejectMaterialVerification(
+    verificationId: number | string,
+    quantityRejected?: number,
+    reason?: string,
+    notes?: string,
+  ) {
+    return this.request(`/material-verifications/${verificationId}/reject/`, {
+      method: "POST",
+      body: JSON.stringify({
+        quantity_rejected: quantityRejected,
+        reason: reason || "",
+        notes: notes || "",
+      }),
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  BANK ACCOUNT & PAYOUT ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getBankAccounts() {
+    return this.request("/bank-accounts/");
+  }
+
+  async createBankAccount(payload: {
+    account_type: "bank" | "mobile_money";
+    account_name: string;
+    account_number: string;
+    bank_code?: string;
+    bank_name?: string;
+    currency?: string;
+  }) {
+    return this.request("/bank-accounts/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async setDefaultBankAccount(accountId: number | string) {
+    return this.request(`/bank-accounts/${accountId}/set-default/`, {
+      method: "POST",
+    });
+  }
+
+  async getPayouts() {
+    return this.request("/payouts/");
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  COST COMPARISON (QUOTED VS ACTUAL) ENDPOINTS
+  // ═══════════════════════════════════════════════════════════
+
+  async getCostComparisons() {
+    return this.request("/cost-comparisons/");
+  }
+
+  async recalculateCostComparison(comparisonId: number | string) {
+    return this.request(`/cost-comparisons/${comparisonId}/recalculate/`, {
+      method: "POST",
+    });
+  }
 }
 
 export const api = new ApiClient();
