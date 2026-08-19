@@ -428,7 +428,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     method: string = "mobile_money",
   ) => {
     const paymentRes = await api.initializePayment({
-      amount: grandTotal,
+      amount: cartTotal,
       currency: "UGX",
       payment_method: method,
       phone_number: phone,

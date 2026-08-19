@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TruHub OS",
-    "slug": "truhub-os",
+    "slug": "homebase-os",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
