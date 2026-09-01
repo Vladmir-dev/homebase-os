@@ -36,6 +36,8 @@ export default function DisputesScreen() {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [newDisputeModal, setNewDisputeModal] = useState(false);
   const [transactionId, setTransactionId] = useState('');
+  const [transactionDropdownVisible, setTransactionDropdownVisible] = useState(false);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [disputeType, setDisputeType] = useState('quality');
@@ -63,9 +65,23 @@ export default function DisputesScreen() {
     fetchDisputes();
   };
 
+  const fetchTransactions = useCallback(async () => {
+    try {
+      const data = await api.getTransactions();
+      setTransactions(Array.isArray(data) ? data : data.results || []);
+    } catch (err: any) {
+      console.warn('Failed to load transactions:', err.message);
+    }
+  }, []);
+
+  const openNewDisputeModal = () => {
+    fetchTransactions();
+    setNewDisputeModal(true);
+  };
+
   const handleCreateDispute = async () => {
     if (!transactionId.trim() || !subject.trim() || !description.trim()) {
-      Alert.alert('Required', 'Please fill in transaction ID, subject, and description.');
+      Alert.alert('Required', 'Please select a transaction, subject, and description.');
       return;
     }
     setActionLoading(true);
@@ -142,7 +158,7 @@ export default function DisputesScreen() {
           <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Disputes</Text>
-        <TouchableOpacity onPress={() => setNewDisputeModal(true)}>
+        <TouchableOpacity onPress={openNewDisputeModal}>
           <Ionicons name="add-circle-outline" size={26} color="#2563EB" />
         </TouchableOpacity>
       </View>
@@ -267,14 +283,35 @@ export default function DisputesScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.fieldLabel}>Transaction ID</Text>
-            <TextInput
-              style={styles.input}
-              value={transactionId}
-              onChangeText={setTransactionId}
-              keyboardType="numeric"
-              placeholder="Enter transaction ID"
-            />
+            <Text style={styles.fieldLabel}>Transaction</Text>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setTransactionDropdownVisible(!transactionDropdownVisible)}
+            >
+              <Text style={transactionId ? styles.dropdownText : styles.dropdownPlaceholder}>
+                {transactionId ? `#${transactionId}` : 'Select a transaction'}
+              </Text>
+              <Ionicons name={transactionDropdownVisible ? 'chevron-up' : 'chevron-down'} size={18} color="#64748B" />
+            </TouchableOpacity>
+            {transactionDropdownVisible && (
+              <View style={styles.dropdownList}>
+                {transactions.length === 0 ? (
+                  <Text style={styles.dropdownEmpty}>No transactions available.</Text>
+                ) : (
+                  transactions.map((t: any) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[styles.dropdownOption, String(t.id) === transactionId && styles.dropdownOptionActive]}
+                      onPress={() => { setTransactionId(String(t.id)); setTransactionDropdownVisible(false); }}
+                    >
+                      <Text style={[styles.dropdownOptionText, String(t.id) === transactionId && { color: '#fff' }]}>
+                        #{t.id} · {t.currency} {t.amount}{t.asset_name ? ` · ${t.asset_name}` : ''}{t.type ? ` · ${t.type.replace('_', ' ')}` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            )}
 
             <Text style={styles.fieldLabel}>Type</Text>
             <View style={styles.typeRow}>
@@ -381,6 +418,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC', borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0',
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1E293B',
   },
+  dropdown: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC', borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0',
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  dropdownText: { fontSize: 14, color: '#1E293B' },
+  dropdownPlaceholder: { fontSize: 14, color: '#94A3B8' },
+  dropdownList: { marginTop: 8, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 10, overflow: 'hidden' },
+  dropdownOption: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  dropdownOptionActive: { backgroundColor: '#2563EB' },
+  dropdownOptionText: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
+  dropdownEmpty: { padding: 16, fontSize: 13, color: '#94A3B8', textAlign: 'center' },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   typeBtn: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,

@@ -1376,30 +1376,30 @@ class ApiClient {
     if (phaseId) params.set('phase', String(phaseId));
     if (assetId) params.set('asset', String(assetId));
     const qs = params.toString() ? `?${params.toString()}` : '';
-    return this.request(`/construction/boqs/${qs}`);
+    return this.request(`/boqs/${qs}`);
   }
 
   async createBOQ(payload: { phase: number; asset: number; title?: string; notes?: string }) {
-    return this.request("/construction/boqs/", {
+    return this.request("/boqs/", {
       method: "POST",
       body: JSON.stringify(payload),
     });
   }
 
   async approveBOQ(boqId: number | string) {
-    return this.request(`/construction/boqs/${boqId}/approve/`, { method: "POST" });
+    return this.request(`/boqs/${boqId}/approve/`, { method: "POST" });
   }
 
   async recalculateBOQ(boqId: number | string) {
-    return this.request(`/construction/boqs/${boqId}/recalculate/`, { method: "POST" });
+    return this.request(`/boqs/${boqId}/recalculate/`, { method: "POST" });
   }
 
   async deleteBOQ(boqId: number | string) {
-    return this.request(`/construction/boqs/${boqId}/`, { method: "DELETE" });
+    return this.request(`/boqs/${boqId}/`, { method: "DELETE" });
   }
 
   async getBOQItems(boqId: number | string) {
-    return this.request(`/construction/boq-items/?boq=${boqId}`);
+    return this.request(`/boq-items/?boq=${boqId}`);
   }
 
   async createBOQItem(payload: {
@@ -1412,7 +1412,7 @@ class ApiClient {
     category?: string;
     sort_order?: number;
   }) {
-    return this.request("/construction/boq-items/", {
+    return this.request("/boq-items/", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -1428,14 +1428,14 @@ class ApiClient {
     category: string;
     sort_order: number;
   }>) {
-    return this.request(`/construction/boq-items/${itemId}/`, {
+    return this.request(`/boq-items/${itemId}/`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
   }
 
   async deleteBOQItem(itemId: number | string) {
-    return this.request(`/construction/boq-items/${itemId}/`, { method: "DELETE" });
+    return this.request(`/boq-items/${itemId}/`, { method: "DELETE" });
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -1447,7 +1447,7 @@ class ApiClient {
     if (phaseId) params.set('phase', String(phaseId));
     if (status) params.set('status', status);
     const qs = params.toString() ? `?${params.toString()}` : '';
-    return this.request(`/construction/milestones/${qs}`);
+    return this.request(`/milestones/${qs}`);
   }
 
   async createMilestone(payload: {
@@ -1455,7 +1455,7 @@ class ApiClient {
     priority?: string; target_date?: string; estimated_cost?: number;
     sort_order?: number; dependencies?: number[];
   }) {
-    return this.request("/construction/milestones/", {
+    return this.request("/milestones/", {
       method: "POST", body: JSON.stringify(payload),
     });
   }
@@ -1464,29 +1464,29 @@ class ApiClient {
     title: string; description: string; priority: string;
     target_date: string; estimated_cost: number; sort_order: number;
   }>) {
-    return this.request(`/construction/milestones/${id}/`, {
+    return this.request(`/milestones/${id}/`, {
       method: "PATCH", body: JSON.stringify(payload),
     });
   }
 
   async startMilestone(id: number | string) {
-    return this.request(`/construction/milestones/${id}/start/`, { method: "POST" });
+    return this.request(`/milestones/${id}/start/`, { method: "POST" });
   }
 
   async completeMilestone(id: number | string) {
-    return this.request(`/construction/milestones/${id}/complete/`, { method: "POST" });
+    return this.request(`/milestones/${id}/complete/`, { method: "POST" });
   }
 
   async skipMilestone(id: number | string) {
-    return this.request(`/construction/milestones/${id}/skip/`, { method: "POST" });
+    return this.request(`/milestones/${id}/skip/`, { method: "POST" });
   }
 
   async deleteMilestone(id: number | string) {
-    return this.request(`/construction/milestones/${id}/`, { method: "DELETE" });
+    return this.request(`/milestones/${id}/`, { method: "DELETE" });
   }
 
   async getMilestoneProofs(milestoneId: number | string) {
-    return this.request(`/construction/milestone-proofs/?milestone=${milestoneId}`);
+    return this.request(`/milestone-proofs/?milestone=${milestoneId}`);
   }
 
   async createMilestoneProof(milestoneId: number | string, payload: {
@@ -1498,7 +1498,7 @@ class ApiClient {
     if (payload.description) formData.append('description', payload.description);
     if (payload.proof_type) formData.append('proof_type', payload.proof_type);
     if (payload.file) formData.append('file', payload.file);
-    return this.request("/construction/milestone-proofs/", {
+    return this.request("/milestone-proofs/", {
       method: "POST", body: formData, headers: {},
     });
   }

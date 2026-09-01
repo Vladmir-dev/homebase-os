@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,44 +12,16 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import ServiceCard from '../../components/ServiceCard';
 import { useApp } from '../../context/AppContext'; 
 import PortfolioWorkspace from '../../components/workspace/PortfolioWorkspace';
 import GenesisWorkspace from '../../components/workspace/GenesisWorkspace';
-import { api } from '../../services/api';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [backendCategories, setBackendCategories] = useState<any[]>([]);
   
   // Destructure context states
-  const { activeAsset, assets, setActiveAssetById, isOffline, hasScope } = useApp();
-
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const cats = await api.getCategories();
-        if (Array.isArray(cats) && cats.length > 0) {
-          setBackendCategories(cats);
-        }
-      } catch (e) {
-        console.warn('Backend categories fetch failed:', e);
-      }
-    };
-    loadCategories();
-  }, []);
-
-  // Display categories array
-  const displayCategories = backendCategories.map((c) => ({
-    id: String(c.id || c.slug),
-    name: c.name,
-    totalBookings: `${c.professionals_count || 0} Pros`,
-    rating: '4.8',
-    bannerImage:
-      c.image_url ||
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600',
-  }));
+  const { activeAsset, assets, setActiveAssetById, isOffline, hasScope, userProfile } = useApp();
 
   return (
     <View style={styles.masterWrapper}>
@@ -188,27 +160,6 @@ export default function HomeScreen() {
                 <Text style={styles.commandButtonText}>Suppliers</Text>
                 <Ionicons name="chevron-forward" size={18} color="#64748B" />
               </TouchableOpacity>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
-                {displayCategories.length > 0 ? (
-                  displayCategories.map((category) => (
-                    <ServiceCard
-                      key={category.id}
-                      imageUri={category.bannerImage}
-                      title={category.name}
-                      rating={category.rating}
-                      subtitle={category.totalBookings}
-                      onPress={() => router.push({
-                        pathname: '/category/[categoryId]',
-                        params: { categoryId: category.id }
-                      })}
-                    />
-                  ))
-                ) : (
-                  <View style={styles.noCategoriesBox}>
-                    <Text style={styles.noCategoriesText}>No categories available yet</Text>
-                  </View>
-                )}
-              </ScrollView>
             </View>
           </View>
         )}
@@ -398,6 +349,11 @@ const styles = StyleSheet.create({
   carouselScroll: { paddingBottom: 12, paddingRight: 16 },
   noCategoriesBox: { alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20 },
   noCategoriesText: { fontSize: 15, color: '#94A3B8', fontWeight: '600' },
+  emptyServicesBox: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#fff', borderRadius: 12, paddingVertical: 20, marginTop: 4,
+    borderWidth: 1, borderColor: 'rgba(37, 99, 235, 0.1)',
+  },
   commandButton: {
     backgroundColor: '#fff',
     borderRadius: 8,

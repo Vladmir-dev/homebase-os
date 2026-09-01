@@ -36,7 +36,7 @@ export default function TimelineScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [phaseData, msData] = await Promise.all([
-        api.request('/construction/phases/').catch(() => []),
+        api.getProjectPhases().catch(() => []),
         api.getMilestones().catch(() => []),
       ]);
       setPhases(Array.isArray(phaseData) ? phaseData : phaseData?.results || []);

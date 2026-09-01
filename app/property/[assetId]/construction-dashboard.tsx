@@ -38,11 +38,11 @@ export default function ConstructionDashboardScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [phaseData, msData, boqData, deliveryData, diaryData] = await Promise.all([
-        api.request('/construction/phases/').catch(() => []),
+        api.getProjectPhases().catch(() => []),
         api.getMilestones().catch(() => []),
         api.getBOQs(undefined, assetId).catch(() => []),
-        api.request('/construction/deliveries/').catch(() => []),
-        api.request('/construction/diary/').catch(() => []),
+        api.getMaterialDeliveries().catch(() => []),
+        api.getSiteDiary().catch(() => []),
       ]);
       setPhases(Array.isArray(phaseData) ? phaseData : phaseData?.results || []);
       setMilestones(Array.isArray(msData) ? msData : msData?.results || []);

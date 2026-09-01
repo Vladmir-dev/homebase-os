@@ -33,7 +33,7 @@ export default function ReconciliationScreen() {
     try {
       const [boqData, deliveryData] = await Promise.all([
         api.getBOQs(undefined, assetId).catch(() => []),
-        api.request(`/construction/deliveries/?asset=${assetId}`).catch(() => []),
+        api.getMaterialDeliveries().catch(() => []),
       ]);
       setBoqs(Array.isArray(boqData) ? boqData : boqData?.results || []);
       setDeliveries(Array.isArray(deliveryData) ? deliveryData : deliveryData?.results || []);
@@ -92,7 +92,7 @@ export default function ReconciliationScreen() {
   const totalPlannedCost = rows.reduce((s: number, r: any) => s + parseFloat(r.planned_cost || 0), 0);
   const totalDeliveredCost = rows.reduce((s: number, r: any) => s + r.totalCost, 0);
   const totalVariance = rows.reduce((s: number, r: any) => s + Math.abs(r.variance), 0);
-  const itemsOnTrack = rows.filter((r) => r.status === 'on_track').length;
+  const itemsOnTrack = rows.filter((r: any) => r.status === 'on_track').length;
 
   if (loading) {
     return <View style={styles.center}><ActivityIndicator size="large" color="#2563EB" /></View>;

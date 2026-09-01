@@ -37,9 +37,9 @@ export default function SiteManagementScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [diaryData, attData, camData] = await Promise.all([
-        api.request('/construction/diary/').catch(() => []),
-        api.request('/construction/attendance/').catch(() => []),
-        api.request('/construction/cameras/').catch(() => []),
+        api.getSiteDiary().catch(() => []),
+        api.getLaborAttendance().catch(() => []),
+        api.getSiteCameras().catch(() => []),
       ]);
       setDiaryEntries(Array.isArray(diaryData) ? diaryData : diaryData?.results || []);
       setAttendance(Array.isArray(attData) ? attData : attData?.results || []);
@@ -62,14 +62,12 @@ export default function SiteManagementScreen() {
     }
     setActionLoading(true);
     try {
-      await api.request('/construction/diary/', {
-        method: 'POST',
-        body: JSON.stringify({
-          entry_date: diaryDate,
-          notes: diaryNotes.trim(),
-          weather: diaryWeather.trim(),
-          workers_count: parseInt(diaryWorkers) || 0,
-        }),
+      await api.createSiteDiary({
+        site: parseInt(assetId),
+        entry_date: diaryDate,
+        notes: diaryNotes.trim(),
+        weather: diaryWeather.trim(),
+        workers_count: parseInt(diaryWorkers) || 0,
       });
       setDiaryModalVisible(false);
       setDiaryNotes(''); setDiaryWeather(''); setDiaryWorkers('');

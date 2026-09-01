@@ -46,6 +46,7 @@ export default function BOQScreen() {
 
   const [newBOQTitle, setNewBOQTitle] = useState('Bill of Quantities');
   const [newBOQPhase, setNewBOQPhase] = useState('');
+  const [phaseDropdownVisible, setPhaseDropdownVisible] = useState(false);
   const [phases, setPhases] = useState<any[]>([]);
 
   const [itemName, setItemName] = useState('');
@@ -59,7 +60,7 @@ export default function BOQScreen() {
     try {
       const [boqData, phaseData] = await Promise.all([
         api.getBOQs(undefined, assetId).catch(() => []),
-        api.request('/construction/phases/').catch(() => []),
+        api.getProjectPhases().catch(() => []),
       ]);
       const boqList = Array.isArray(boqData) ? boqData : boqData?.results || [];
       setBoqs(boqList);
@@ -90,9 +91,11 @@ export default function BOQScreen() {
 
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
+  const selectedPhase = phases.find((p: any) => String(p.id) === newBOQPhase);
+
   const handleCreateBOQ = async () => {
     if (!newBOQPhase) {
-      Alert.alert('Required', 'Please enter a phase ID.');
+      Alert.alert('Required', 'Please select a phase.');
       return;
     }
     setActionLoading(true);
@@ -370,20 +373,34 @@ export default function BOQScreen() {
               <TextInput style={styles.formInput} value={newBOQTitle} onChangeText={setNewBOQTitle} placeholder="Bill of Quantities" placeholderTextColor="#94A3B8" />
             </View>
             <View style={styles.formSection}>
-              <Text style={styles.formLabel}>Phase ID</Text>
-              <TextInput style={styles.formInput} value={newBOQPhase} onChangeText={setNewBOQPhase} placeholder="e.g. 1" placeholderTextColor="#94A3B8" keyboardType="numeric" />
-              {phases.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-                  {phases.map((p: any) => (
-                    <TouchableOpacity
-                      key={p.id}
-                      style={[styles.phaseChip, newBOQPhase === String(p.id) && styles.phaseChipActive]}
-                      onPress={() => setNewBOQPhase(String(p.id))}
-                    >
-                      <Text style={[styles.phaseChipText, newBOQPhase === String(p.id) && { color: '#fff' }]}>{p.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+              <Text style={styles.formLabel}>Phase</Text>
+              <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setPhaseDropdownVisible(!phaseDropdownVisible)}
+              >
+                <Text style={newBOQPhase ? styles.dropdownText : styles.dropdownPlaceholder}>
+                  {selectedPhase ? selectedPhase.name : 'Select a phase'}
+                </Text>
+                <Ionicons name={phaseDropdownVisible ? 'chevron-up' : 'chevron-down'} size={18} color="#64748B" />
+              </TouchableOpacity>
+              {phaseDropdownVisible && (
+                <View style={styles.dropdownList}>
+                  {phases.length === 0 ? (
+                    <Text style={styles.dropdownEmpty}>No phases available.</Text>
+                  ) : (
+                    phases.map((p: any) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={[styles.dropdownOption, String(p.id) === newBOQPhase && styles.dropdownOptionActive]}
+                        onPress={() => { setNewBOQPhase(String(p.id)); setPhaseDropdownVisible(false); }}
+                      >
+                        <Text style={[styles.dropdownOptionText, String(p.id) === newBOQPhase && { color: '#fff' }]}>
+                          {p.name}{p.phase_type ? ` · ${p.phase_type}` : ''}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
               )}
             </View>
             <TouchableOpacity style={[styles.submitButton, actionLoading && { opacity: 0.6 }]} onPress={handleCreateBOQ} disabled={actionLoading}>
@@ -562,6 +579,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1E293B',
   },
   formRow: { flexDirection: 'row' },
+
+  dropdown: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC', borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0',
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  dropdownText: { fontSize: 14, color: '#1E293B' },
+  dropdownPlaceholder: { fontSize: 14, color: '#94A3B8' },
+  dropdownList: { marginTop: 8, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 10, overflow: 'hidden' },
+  dropdownOption: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  dropdownOptionActive: { backgroundColor: '#2563EB' },
+  dropdownOptionText: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
+  dropdownEmpty: { padding: 16, fontSize: 13, color: '#94A3B8', textAlign: 'center' },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {

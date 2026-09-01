@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TABS = [
   { label: 'Home', icon: 'home-outline' as const, route: '/' },
+  { label: 'Services', icon: 'grid-outline' as const, route: '/services' },
   { label: 'Cart', icon: 'cart-outline' as const, route: '/cart' },
   { label: 'Profile', icon: 'person-outline' as const, route: '/account' },
 ];

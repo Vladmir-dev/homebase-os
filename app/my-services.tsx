@@ -69,7 +69,7 @@ export default function MyServicesScreen() {
     if (!providerEmail) return;
     try {
       const data = await api.getServices({ provider: providerEmail });
-      setServices(Array.isArray(data) ? data : []);
+      setServices(Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []);
     } catch (e) {
       console.warn("Failed fetching provider services:", e);
     } finally {
@@ -218,13 +218,26 @@ export default function MyServicesScreen() {
           ? Number(form.duration_minutes)
           : undefined,
         description: form.description.trim() || undefined,
+        is_active: editingService ? editingService.is_active : true,
       };
+      let savedService: ServiceItemResponse | null = null;
       if (editingService) {
-        await api.updateService(editingService.id, payload, pickedImages);
+        savedService = await api.updateService(editingService.id, payload, pickedImages);
       } else {
-        await api.createService(payload, pickedImages);
+        savedService = await api.createService(payload, pickedImages);
       }
       setFormModalVisible(false);
+      if (savedService) {
+        setServices((prev) => {
+          const exists = prev.some((s) => s.id === savedService!.id);
+          if (editingService) {
+            return exists
+              ? prev.map((s) => (s.id === savedService!.id ? savedService! : s))
+              : [savedService!, ...prev];
+          }
+          return exists ? prev : [savedService!, ...prev];
+        });
+      }
       await loadServices();
     } catch (e: any) {
       Alert.alert("Save failed", e.message || "Could not save the service.");
@@ -322,7 +335,7 @@ export default function MyServicesScreen() {
                 <View style={styles.serviceStatsRow}>
                   <Ionicons name="star" size={13} color="#f9a825" />
                   <Text style={styles.serviceStatsText}>
-                    {service.rating?.toFixed(1) ?? "0.0"} (
+                    {Number(service.rating ?? 0).toFixed(1)} (
                     {service.reviews_count ?? 0} reviews)
                   </Text>
                   <Text style={styles.serviceStatus}>

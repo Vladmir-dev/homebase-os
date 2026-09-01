@@ -52,7 +52,7 @@ export default function MilestonesScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [phaseData, msData] = await Promise.all([
-        api.request('/construction/phases/').catch(() => []),
+        api.getProjectPhases().catch(() => []),
         api.getMilestones(selectedPhase ? String(selectedPhase) : undefined).catch(() => []),
       ]);
       setPhases(Array.isArray(phaseData) ? phaseData : phaseData?.results || []);

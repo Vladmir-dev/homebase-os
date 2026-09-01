@@ -1,15 +1,11 @@
+import { Button, Card, Header, Input, Section, Spacing } from "@/components/ui";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
     ScrollView,
-    StyleSheet,
     Text,
-    TextInput,
-    TouchableOpacity,
     View,
 } from "react-native";
-
 import { useApp } from "../context/AppContext";
 
 export default function AssetsScreen() {
@@ -89,268 +85,154 @@ export default function AssetsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ 
+          paddingTop: 54, 
+          paddingHorizontal: Spacing.containerPaddingH, 
+          paddingBottom: 40 
+        }}
       >
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>Registered Assets</Text>
-          <Text style={styles.subtitle}>
-            {assetCount} item{assetCount === 1 ? "" : "s"}
-          </Text>
-        </View>
+        <Header 
+          title="Registered Assets" 
+          subtitle={`${assetCount} item${assetCount === 1 ? "" : "s"}`}
+        />
 
         {assetCount > 0 ? (
           assets.map((asset) => (
-            <View key={asset.id} style={styles.assetCard}>
-              <View style={styles.assetCardHeader}>
-                <Text style={styles.assetName}>{asset.name}</Text>
-                <Text style={styles.assetRole}>{asset.role}</Text>
+            <Card key={asset.id} variant="default">
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: "#1E293B" }}>
+                  {asset.name}
+                </Text>
               </View>
-              <Text style={styles.assetMeta}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#4caf50", marginBottom: 8 }}>
+                {asset.role}
+              </Text>
+              <Text style={{ fontSize: 13, color: "#64748B", marginBottom: 8 }}>
                 {asset.location || "No location set"}
               </Text>
-              <Text style={styles.assetDescription}>
+              <Text style={{ fontSize: 13, color: "#6b8f6c" }}>
                 {asset.description || "No description provided."}
               </Text>
-            </View>
+            </Card>
           ))
         ) : (
-          <View style={styles.emptyStateCard}>
-            <Text style={styles.emptyStateTitle}>No registered assets yet</Text>
-            <Text style={styles.emptyStateText}>
+          <Card variant="default">
+            <Text style={{ fontSize: 16, fontWeight: "800", color: "#1E293B", marginBottom: 8 }}>
+              No registered assets yet
+            </Text>
+            <Text style={{ fontSize: 13, color: "#64748B" }}>
               Create assets here and manage your properties, rentals, and
               maintenance in one place.
             </Text>
-          </View>
+          </Card>
         )}
 
-        <View style={styles.createSection}>
-          <Text style={styles.sectionHeading}>Create New Asset</Text>
-          <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Asset name</Text>
-            <TextInput
-              style={styles.formInput}
-              placeholder="Enter asset name"
-              placeholderTextColor="#8a9f88"
-              value={assetName}
-              onChangeText={setAssetName}
-            />
-          </View>
+        <Section title="Create New Asset">
+          <Input
+            label="Asset name"
+            placeholder="Enter asset name"
+            value={assetName}
+            onChangeText={setAssetName}
+            containerStyle={{ marginBottom: Spacing.md }}
+          />
 
-          <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Asset type</Text>
-            <View style={styles.typeOptionsRow}>
+          <View style={{ marginBottom: Spacing.md }}>
+            <Text style={{ fontSize: 13, color: "#64748B", marginBottom: 8, fontWeight: "700" }}>
+              Asset type
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
               {[
                 { label: "Household", value: "household" },
                 { label: "Rental", value: "rental_unit" },
                 { label: "Construction", value: "construction_site" },
                 { label: "Estate", value: "estate" },
               ].map((option) => (
-                <TouchableOpacity
+                <Button
                   key={option.value}
-                  style={[
-                    styles.typeOption,
-                    assetType === option.value && styles.typeOptionActive,
-                  ]}
+                  title={option.label}
                   onPress={() => setAssetType(option.value)}
-                >
-                  <Text
-                    style={
-                      assetType === option.value
-                        ? styles.typeOptionTextActive
-                        : styles.typeOptionText
-                    }
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
+                  variant={assetType === option.value ? 'primary' : 'outline'}
+                  size="sm"
+                />
               ))}
             </View>
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Location</Text>
-            <TextInput
-              style={styles.formInput}
-              placeholder="Enter location"
-              placeholderTextColor="#8a9f88"
-              value={assetLocation}
-              onChangeText={setAssetLocation}
-            />
-          </View>
+          <Input
+            label="Location"
+            placeholder="Enter location"
+            value={assetLocation}
+            onChangeText={setAssetLocation}
+            containerStyle={{ marginBottom: Spacing.md }}
+          />
 
-          <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Description</Text>
-            <TextInput
-              style={styles.formInput}
-              placeholder="Enter asset description"
-              placeholderTextColor="#8a9f88"
-              value={assetDescription}
-              onChangeText={setAssetDescription}
-            />
-          </View>
+          <Input
+            label="Description"
+            placeholder="Enter asset description"
+            value={assetDescription}
+            onChangeText={setAssetDescription}
+            containerStyle={{ marginBottom: Spacing.md }}
+          />
 
-          <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>GPS coordinates</Text>
-            <TextInput
-              style={styles.formInput}
-              placeholder="Enter GPS coordinates"
-              placeholderTextColor="#8a9f88"
-              value={gpsCoordinates}
-              onChangeText={setGpsCoordinates}
-            />
-          </View>
+          <Input
+            label="GPS coordinates"
+            placeholder="Enter GPS coordinates"
+            value={gpsCoordinates}
+            onChangeText={setGpsCoordinates}
+            containerStyle={{ marginBottom: Spacing.md }}
+          />
 
           {assetType === "rental_unit" && (
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Monthly rent</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder="Enter monthly rent"
-                placeholderTextColor="#8a9f88"
-                keyboardType="numeric"
-                value={rentAmount}
-                onChangeText={setRentAmount}
-              />
-            </View>
+            <Input
+              label="Monthly rent"
+              placeholder="Enter monthly rent"
+              keyboardType="numeric"
+              value={rentAmount}
+              onChangeText={setRentAmount}
+              containerStyle={{ marginBottom: Spacing.md }}
+            />
           )}
 
           {assetType === "construction_site" && (
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Budget planned</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder="Enter planned budget"
-                placeholderTextColor="#8a9f88"
-                keyboardType="numeric"
-                value={budgetPlanned}
-                onChangeText={setBudgetPlanned}
-              />
-            </View>
+            <Input
+              label="Budget planned"
+              placeholder="Enter planned budget"
+              keyboardType="numeric"
+              value={budgetPlanned}
+              onChangeText={setBudgetPlanned}
+              containerStyle={{ marginBottom: Spacing.md }}
+            />
           )}
 
           {assetType === "estate" && (
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Total units</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder="Enter total units"
-                placeholderTextColor="#8a9f88"
-                keyboardType="numeric"
-                value={totalUnits}
-                onChangeText={setTotalUnits}
-              />
-            </View>
+            <Input
+              label="Total units"
+              placeholder="Enter total units"
+              keyboardType="numeric"
+              value={totalUnits}
+              onChangeText={setTotalUnits}
+              containerStyle={{ marginBottom: Spacing.md }}
+            />
           )}
 
-          {assetError ? (
-            <Text style={styles.errorText}>{assetError}</Text>
-          ) : null}
+          {assetError && (
+            <Text style={{ color: "#c62828", fontSize: 13, marginBottom: Spacing.md, fontWeight: "500" }}>
+              {assetError}
+            </Text>
+          )}
 
-          <TouchableOpacity
-            style={[styles.submitButton, creatingAsset && styles.disabledBtn]}
+          <Button
+            title="Create Asset"
             onPress={handleCreateAsset}
+            loading={creatingAsset}
             disabled={creatingAsset}
-          >
-            {creatingAsset ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>Create Asset</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            size="lg"
+          />
+        </Section>
       </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  scrollContent: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 40 },
-  headerRow: { marginBottom: 24 },
-  title: { fontSize: 24, fontWeight: "800", color: "#1E293B" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 8 },
-  assetCard: {
-    backgroundColor: "rgba(255,255,255,0.8)",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.95)",
-  },
-  assetCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  assetName: { fontSize: 16, fontWeight: "800", color: "#1E293B" },
-  assetRole: { fontSize: 12, fontWeight: "700", color: "#4caf50" },
-  assetMeta: { fontSize: 13, color: "#64748B", marginBottom: 8 },
-  assetDescription: { fontSize: 13, color: "#6b8f6c" },
-  emptyStateCard: {
-    backgroundColor: "rgba(255,255,255,0.75)",
-    borderRadius: 18,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.95)",
-    marginBottom: 18,
-  },
-  emptyStateTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#1E293B",
-    marginBottom: 8,
-  },
-  emptyStateText: { fontSize: 13, color: "#64748B" },
-  createSection: { marginTop: 10 },
-  sectionHeading: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#1E293B",
-    marginBottom: 14,
-  },
-  formGroup: { marginBottom: 14 },
-  formLabel: {
-    fontSize: 13,
-    color: "#64748B",
-    marginBottom: 8,
-    fontWeight: "700",
-  },
-  formInput: {
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 14,
-    height: 50,
-    paddingHorizontal: 16,
-    color: "#1E293B",
-    borderWidth: 1,
-    borderColor: "rgba(37, 99, 235,0.2)",
-  },
-  typeOptionsRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  typeOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(37, 99, 235,0.2)",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  typeOptionActive: { backgroundColor: "#2563EB", borderColor: "#2563EB" },
-  typeOptionText: { color: "#64748B", fontSize: 13 },
-  typeOptionTextActive: { color: "#fff", fontSize: 13, fontWeight: "700" },
-  errorText: { color: "#c62828", fontSize: 13, marginBottom: 12 },
-  submitButton: {
-    backgroundColor: "#2563EB",
-    height: 52,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  disabledBtn: { opacity: 0.7 },
-  submitButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-});

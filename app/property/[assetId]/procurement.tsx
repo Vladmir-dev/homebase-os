@@ -71,12 +71,12 @@ export default function ProcurementScreen() {
   });
 
   const filteredItems = filterStatus
-    ? procurementItems.filter((i) => i.procStatus === filterStatus)
+    ? procurementItems.filter((i: any) => i.procStatus === filterStatus)
     : procurementItems;
 
   const counts = PROCUREMENT_STATUS.map((s) => ({
     ...s,
-    count: procurementItems.filter((i) => i.procStatus === s.value).length,
+    count: procurementItems.filter((i: any) => i.procStatus === s.value).length,
   }));
 
   const formatCurrency = (v: number) => `UGX ${Number(v || 0).toLocaleString()}`;
@@ -239,3 +239,68 @@ export default function ProcurementScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingTop: 56, paddingBottom: 12, paddingHorizontal: 16,
+    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+  },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
+
+  filterRow: { flexGrow: 0, paddingHorizontal: 16, marginTop: 12 },
+  filterChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#E2E8F0',
+  },
+  filterChipActive: { backgroundColor: '#2563EB', borderColor: '#2563EB' },
+  filterText: { fontSize: 13, fontWeight: '600', color: '#475569' },
+
+  sectionCard: {
+    backgroundColor: '#fff', margin: 16, marginBottom: 8, padding: 16, borderRadius: 12,
+    borderWidth: 1, borderColor: '#F1F5F9',
+  },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1E293B', marginBottom: 12 },
+  emptyText: { fontSize: 14, color: '#94A3B8', textAlign: 'center', paddingVertical: 24 },
+
+  itemCard: { backgroundColor: '#F8FAFC', borderRadius: 10, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0' },
+  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  itemName: { fontSize: 14, fontWeight: '700', color: '#1E293B', flex: 1, marginRight: 8 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  statusText: { fontSize: 11, fontWeight: '700' },
+  itemMeta: { fontSize: 12, color: '#64748B', marginTop: 2 },
+  linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10 },
+  linkBtnText: { fontSize: 13, fontWeight: '700', color: '#2563EB' },
+
+  supplierCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  supplierInfo: { flex: 1, marginRight: 8 },
+  supplierName: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
+  supplierMeta: { fontSize: 12, color: '#64748B', marginTop: 2 },
+  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  ratingText: { fontSize: 12, fontWeight: '700', color: '#B45309' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
+  modalSubtitle: { fontSize: 13, color: '#64748B', marginBottom: 12 },
+  supplierOption: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC', borderRadius: 10, padding: 14, marginBottom: 8,
+    borderWidth: 1, borderColor: '#E2E8F0',
+  },
+  supplierOptionActive: { borderColor: '#2563EB', backgroundColor: '#EFF6FF' },
+  supplierOptionName: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
+  supplierOptionMeta: { fontSize: 12, color: '#64748B', marginTop: 2 },
+  formSection: { marginBottom: 16 },
+  formLabel: { fontSize: 13, fontWeight: '700', color: '#1E293B', marginBottom: 6 },
+  formInput: {
+    backgroundColor: '#F8FAFC', borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0',
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1E293B',
+  },
+  submitButton: { backgroundColor: '#2563EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
+  submitButtonText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+});
