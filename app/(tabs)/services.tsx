@@ -14,6 +14,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -68,6 +69,7 @@ export default function ServicesScreen() {
   const [loading, setLoading] = useState(true);
   const [detailService, setDetailService] = useState<ServiceItem | null>(null);
   const [detailImageIndex, setDetailImageIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadAll = async () => {
     setLoading(true);
@@ -122,16 +124,19 @@ export default function ServicesScreen() {
   }, [providerEmail]);
 
   useEffect(() => {
-    if (!selectedCategoryId) {
-      setDisplayedServices(allServices);
-      return;
-    }
-    setDisplayedServices(
-      allServices.filter(
-        (s) => String(s.subCategoryId) === String(selectedCategoryId)
-      )
-    );
-  }, [selectedCategoryId, allServices]);
+    const q = searchQuery.trim().toLowerCase();
+    const filtered = allServices.filter((s) => {
+      const matchesCategory =
+        !selectedCategoryId ||
+        String(s.subCategoryId) === String(selectedCategoryId);
+      const matchesSearch =
+        !q ||
+        s.name.toLowerCase().includes(q) ||
+        (s.descriptionPoints && s.descriptionPoints.some((p) => p.toLowerCase().includes(q)));
+      return matchesCategory && matchesSearch;
+    });
+    setDisplayedServices(filtered);
+  }, [selectedCategoryId, allServices, searchQuery]);
 
   return (
     <View style={styles.masterWrapper}>
@@ -143,6 +148,24 @@ export default function ServicesScreen() {
         <TouchableOpacity style={styles.refreshBtn} onPress={loadAll}>
           <Ionicons name="refresh" size={20} color="#1E293B" />
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={18} color="#94A3B8" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search services..."
+          placeholderTextColor="#94A3B8"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
@@ -266,9 +289,11 @@ export default function ServicesScreen() {
             />
           ) : (
             <View style={styles.emptyBox}>
-              <Ionicons name="file-tray-outline" size={40} color="#94A3B8" />
+              <Ionicons name="search" size={40} color="#94A3B8" />
               <Text style={styles.emptyText}>
-                No services available yet
+                {searchQuery.trim() || selectedCategoryId
+                  ? "No services match your search"
+                  : "No services available yet"}
               </Text>
             </View>
           )
@@ -415,6 +440,21 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 22, fontWeight: "800", color: "#1E293B" },
   refreshBtn: { padding: 6 },
+
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  searchInput: { flex: 1, fontSize: 15, color: "#1E293B" },
 
   listContent: { padding: 16, paddingBottom: 40 },
   serviceRow: { gap: 12, justifyContent: "space-between" },
