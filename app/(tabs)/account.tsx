@@ -2,12 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
     Modal,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -16,20 +14,9 @@ import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 
 export default function AccountScreen() {
-  const { logout, userProfile, assets, createAsset } = useApp();
+  const { logout, userProfile, assets } = useApp();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showAssetModal, setShowAssetModal] = useState(false);
-  const [assetName, setAssetName] = useState("");
-  const [assetType, setAssetType] = useState("household");
-  const [assetLocation, setAssetLocation] = useState("");
-  const [assetDescription, setAssetDescription] = useState("");
-  const [gpsCoordinates, setGpsCoordinates] = useState("");
-  const [rentAmount, setRentAmount] = useState("");
-  const [budgetPlanned, setBudgetPlanned] = useState("");
-  const [totalUnits, setTotalUnits] = useState("");
-  const [creatingAsset, setCreatingAsset] = useState(false);
-  const [assetError, setAssetError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -49,7 +36,12 @@ export default function AccountScreen() {
       icon: "business-outline" as const,
       label: "My Registered Assets",
       badge: `${assets.length}`,
-      action: () => setShowAssetModal(true),
+      route: "/registered-assets",
+    },
+    {
+      icon: "briefcase-outline" as const,
+      label: "My Provided Services",
+      route: "/my-services",
     },
     {
       icon: "notifications-outline" as const,
@@ -65,6 +57,15 @@ export default function AccountScreen() {
       icon: "speedometer-outline" as const,
       label: "Reliability Score",
       value: `${userProfile?.reliability_score ?? 0}/100`,
+      badge: userProfile?.reliability_band
+        ? userProfile.reliability_band.charAt(0).toUpperCase() +
+          userProfile.reliability_band.slice(1)
+        : undefined,
+    },
+    {
+      icon: "warning-outline" as const,
+      label: "Active Strikes",
+      value: `${userProfile?.reliability_strikes ?? 0}`,
     },
     { icon: "card-outline" as const, label: "Flutterwave Payment Methods" },
     {
@@ -99,7 +100,7 @@ export default function AccountScreen() {
             </Text>
           </View>
           <View style={styles.verifiedChip}>
-            <Ionicons name="checkmark-circle" size={16} color="#2e7d32" />
+            <Ionicons name="checkmark-circle" size={16} color="#2563EB" />
             <Text style={styles.verifiedText}>Verified</Text>
           </View>
         </View>
@@ -109,55 +110,17 @@ export default function AccountScreen() {
             <Text style={styles.sectionHeading}>My Registered Assets</Text>
             <TouchableOpacity
               style={styles.createAssetButton}
-              onPress={() => setShowAssetModal(true)}
+              onPress={() => router.push("/registered-assets" as any)}
             >
-              <Text style={styles.createAssetButtonText}>Create asset</Text>
+              <Text style={styles.createAssetButtonText}>
+                Open asset dashboard
+              </Text>
             </TouchableOpacity>
           </View>
-          {assets.length > 0 ? (
-            assets.map((asset) => (
-              <View key={asset.id} style={styles.assetCard}>
-                <View style={styles.assetCardLabel}>
-                  <Ionicons
-                    name={
-                      asset.type === "HOUSEHOLD"
-                        ? "home"
-                        : asset.type === "RENTAL"
-                          ? "business"
-                          : asset.type === "CONSTRUCTION"
-                            ? "construct"
-                            : "shapes"
-                    }
-                    size={18}
-                    color="#2e7d32"
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text style={styles.assetName}>{asset.name}</Text>
-                </View>
-                <Text style={styles.assetMeta}>
-                  {asset.role} · {asset.location || "No location set"}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyStateCard}>
-              <Text style={styles.emptyStateTitle}>
-                No registered assets yet
-              </Text>
-              <Text style={styles.emptyStateText}>
-                You can create your first asset here and start managing
-                services, bookings, and maintenance from your account.
-              </Text>
-              <TouchableOpacity
-                style={styles.emptyStateAction}
-                onPress={() => setShowAssetModal(true)}
-              >
-                <Text style={styles.emptyStateActionText}>
-                  Click here to create assets
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <Text style={styles.assetSummaryText}>
+            View and manage all your registered assets on the dedicated assets
+            screen.
+          </Text>
         </View>
 
         <View style={styles.menuSection}>
@@ -171,7 +134,7 @@ export default function AccountScreen() {
               }}
             >
               <View style={styles.menuLeft}>
-                <Ionicons name={item.icon} size={22} color="#2e7d32" />
+                <Ionicons name={item.icon} size={22} color="#2563EB" />
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </View>
               <View style={styles.menuRight}>
@@ -183,7 +146,7 @@ export default function AccountScreen() {
                 {item.value && (
                   <Text style={styles.valueText}>{item.value}</Text>
                 )}
-                <Ionicons name="chevron-forward" size={18} color="#a5d6a7" />
+                <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
               </View>
             </TouchableOpacity>
           ))}
@@ -199,265 +162,37 @@ export default function AccountScreen() {
       </ScrollView>
 
       <Modal
-        visible={showAssetModal || showLogoutModal}
+        visible={showLogoutModal}
         transparent
         animationType="fade"
-        onRequestClose={() => {
-          if (showAssetModal) setShowAssetModal(false);
-          if (showLogoutModal) setShowLogoutModal(false);
-        }}
+        onRequestClose={() => setShowLogoutModal(false)}
       >
         <View style={styles.modalOverlay}>
-          {showAssetModal ? (
-            <View style={styles.assetModalContent}>
-              <Text style={styles.modalTitle}>Create an Asset</Text>
-              <Text style={styles.modalMessage}>
-                Add your first asset to start managing services and bookings.
-              </Text>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Asset name</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter asset name"
-                  placeholderTextColor="#8a9f88"
-                  value={assetName}
-                  onChangeText={(text) => setAssetName(text)}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Asset type</Text>
-                <View style={styles.typeOptionsRow}>
-                  {[
-                    { label: "Household", value: "household" },
-                    { label: "Rental", value: "rental_unit" },
-                    { label: "Construction", value: "construction_site" },
-                    { label: "Estate", value: "estate" },
-                  ].map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[
-                        styles.typeOption,
-                        assetType === option.value && styles.typeOptionActive,
-                      ]}
-                      onPress={() => setAssetType(option.value)}
-                    >
-                      <Text
-                        style={
-                          assetType === option.value
-                            ? styles.typeOptionTextActive
-                            : styles.typeOptionText
-                        }
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Location</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter location"
-                  placeholderTextColor="#8a9f88"
-                  value={assetLocation}
-                  onChangeText={(text) => setAssetLocation(text)}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Description</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter asset description"
-                  placeholderTextColor="#8a9f88"
-                  value={assetDescription}
-                  onChangeText={(text) => setAssetDescription(text)}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>GPS coordinates</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Enter GPS coordinates"
-                  placeholderTextColor="#8a9f88"
-                  value={gpsCoordinates}
-                  onChangeText={(text) => setGpsCoordinates(text)}
-                />
-              </View>
-
-              {assetType === "rental_unit" && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Monthly rent</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter monthly rent"
-                    placeholderTextColor="#8a9f88"
-                    keyboardType="numeric"
-                    value={rentAmount}
-                    onChangeText={(text) => setRentAmount(text)}
-                  />
-                </View>
-              )}
-
-              {assetType === "construction_site" && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Budget planned</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter planned budget"
-                    placeholderTextColor="#8a9f88"
-                    keyboardType="numeric"
-                    value={budgetPlanned}
-                    onChangeText={(text) => setBudgetPlanned(text)}
-                  />
-                </View>
-              )}
-
-              {assetType === "estate" && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Total units</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter total units"
-                    placeholderTextColor="#8a9f88"
-                    keyboardType="numeric"
-                    value={totalUnits}
-                    onChangeText={(text) => setTotalUnits(text)}
-                  />
-                </View>
-              )}
-
-              {assetError ? (
-                <Text style={styles.errorText}>{assetError}</Text>
-              ) : null}
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={[styles.cancelBtn, { flex: 1 }]}
-                  onPress={() => {
-                    setShowAssetModal(false);
-                    setAssetName("");
-                    setAssetLocation("");
-                    setAssetDescription("");
-                    setGpsCoordinates("");
-                    setRentAmount("");
-                    setBudgetPlanned("");
-                    setTotalUnits("");
-                    setAssetError("");
-                  }}
-                >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.confirmBtn, { flex: 1 }]}
-                  onPress={async () => {
-                    if (!assetName.trim()) {
-                      setAssetError("Please enter an asset name");
-                      return;
-                    }
-                    if (!assetLocation.trim()) {
-                      setAssetError("Please enter an asset location");
-                      return;
-                    }
-                    if (assetType === "rental_unit" && !rentAmount.trim()) {
-                      setAssetError(
-                        "Monthly rent is required for rental units",
-                      );
-                      return;
-                    }
-                    if (
-                      assetType === "construction_site" &&
-                      !budgetPlanned.trim()
-                    ) {
-                      setAssetError(
-                        "Budget planned is required for construction sites",
-                      );
-                      return;
-                    }
-                    setCreatingAsset(true);
-                    setAssetError("");
-                    try {
-                      const payload: Record<string, unknown> = {
-                        description: assetDescription.trim(),
-                        gps_coordinates: gpsCoordinates.trim(),
-                      };
-
-                      if (assetType === "rental_unit") {
-                        payload.rent_amount = parseFloat(rentAmount);
-                        payload.currency = "UGX";
-                      }
-                      if (assetType === "construction_site") {
-                        payload.budget_planned = parseFloat(budgetPlanned);
-                      }
-                      if (assetType === "estate") {
-                        payload.total_units = totalUnits.trim()
-                          ? parseInt(totalUnits, 10)
-                          : 0;
-                      }
-
-                      await createAsset(
-                        assetName.trim(),
-                        assetType,
-                        assetLocation.trim(),
-                        payload,
-                      );
-                      setShowAssetModal(false);
-                      setAssetName("");
-                      setAssetLocation("");
-                      setAssetDescription("");
-                      setGpsCoordinates("");
-                      setRentAmount("");
-                      setBudgetPlanned("");
-                      setTotalUnits("");
-                    } catch (error: any) {
-                      console.warn("Create asset failed:", error);
-                      setAssetError(error?.message || "Failed to create asset");
-                    } finally {
-                      setCreatingAsset(false);
-                    }
-                  }}
-                  disabled={creatingAsset}
-                >
-                  {creatingAsset ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.confirmBtnText}>Create</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
+          <View style={styles.modalContent}>
+            <Ionicons name="log-out-outline" size={40} color="#d32f2f" />
+            <Text style={styles.modalTitle}>Confirm Logout</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to log out of TruHub OS?
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmBtn}
+                onPress={() => {
+                  setShowLogoutModal(false);
+                  logout();
+                  router.replace("/(auth)");
+                }}
+              >
+                <Text style={styles.confirmBtnText}>Logout</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            <View style={styles.modalContent}>
-              <Ionicons name="log-out-outline" size={40} color="#d32f2f" />
-              <Text style={styles.modalTitle}>Confirm Logout</Text>
-              <Text style={styles.modalMessage}>
-                Are you sure you want to log out of Homebase OS?
-              </Text>
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => setShowLogoutModal(false)}
-                >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.confirmBtn}
-                  onPress={() => {
-                    setShowLogoutModal(false);
-                    logout();
-                    router.replace("/(auth)");
-                  }}
-                >
-                  <Text style={styles.confirmBtnText}>Logout</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          </View>
         </View>
       </Modal>
     </View>
@@ -467,7 +202,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
   },
   scrollContent: {
     paddingTop: 54,
@@ -477,7 +212,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 20,
   },
   profileCard: {
@@ -494,24 +229,24 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
   },
-  profileName: { fontSize: 17, fontWeight: "700", color: "#1b5e20" },
-  profileEmail: { fontSize: 13, color: "#4c8c4a", marginTop: 4 },
+  profileName: { fontSize: 17, fontWeight: "700", color: "#1E293B" },
+  profileEmail: { fontSize: 13, color: "#64748B", marginTop: 4 },
   verifiedChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     gap: 4,
   },
-  verifiedText: { color: "#2e7d32", fontSize: 11, fontWeight: "700" },
+  verifiedText: { color: "#2563EB", fontSize: 11, fontWeight: "700" },
   menuSection: { gap: 4 },
-  sectionHeading: { fontSize: 16, fontWeight: "800", color: "#1b5e20" },
+  sectionHeading: { fontSize: 16, fontWeight: "800", color: "#1E293B" },
   menuRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -523,11 +258,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   menuLeft: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
-  menuLabel: { fontSize: 15, fontWeight: "600", color: "#1b5e20" },
+  menuLabel: { fontSize: 15, fontWeight: "600", color: "#1E293B" },
   menuRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  valueText: { fontSize: 13, fontWeight: "600", color: "#2e7d32" },
+  valueText: { fontSize: 13, fontWeight: "600", color: "#2563EB" },
   badge: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -568,13 +303,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginTop: 16,
     marginBottom: 8,
   },
   modalMessage: {
     fontSize: 14,
-    color: "#4c8c4a",
+    color: "#64748B",
     textAlign: "center",
     lineHeight: 20,
   },
@@ -582,18 +317,18 @@ const styles = StyleSheet.create({
   formLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#4a6b4a",
+    color: "#64748B",
     marginBottom: 8,
   },
   formInput: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#dce8d9",
-    backgroundColor: "#f7fbf7",
+    borderColor: "#E2E8F0",
+    backgroundColor: "#F8FAFC",
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    color: "#1b4d2b",
+    color: "#1E293B",
     fontSize: 15,
   },
   typeOptionsRow: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
@@ -601,15 +336,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "#c7dac9",
+    borderColor: "#CBD5E1",
     borderRadius: 14,
     backgroundColor: "#f4faf4",
   },
   typeOptionActive: {
-    backgroundColor: "#2e7d32",
-    borderColor: "#2e7d32",
+    backgroundColor: "#2563EB",
+    borderColor: "#2563EB",
   },
-  typeOptionText: { fontSize: 13, color: "#4a6b4a", fontWeight: "700" },
+  typeOptionText: { fontSize: 13, color: "#64748B", fontWeight: "700" },
   typeOptionTextActive: { fontSize: 13, color: "#fff", fontWeight: "700" },
   assetSection: { marginBottom: 20 },
   assetHeaderRow: {
@@ -619,7 +354,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   createAssetButton: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -631,43 +366,43 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "rgba(46,125,50,0.12)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
   },
   assetCardLabel: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 6,
   },
-  assetName: { fontSize: 16, fontWeight: "700", color: "#1b5e20" },
-  assetMeta: { color: "#607d55", fontSize: 13 },
+  assetName: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
+  assetMeta: { color: "#64748B", fontSize: 13 },
   emptyStateCard: {
     backgroundColor: "#fff",
     borderRadius: 18,
     padding: 24,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(46,125,50,0.12)",
+    borderColor: "rgba(37, 99, 235, 0.08)",
   },
   emptyStateTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#1b5e20",
+    color: "#1E293B",
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 14,
-    color: "#4a6b4a",
+    color: "#64748B",
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 16,
   },
   emptyStateAction: {
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 14,
   },
-  emptyStateActionText: { color: "#2e7d32", fontWeight: "700" },
+  emptyStateActionText: { color: "#2563EB", fontWeight: "700" },
   assetModalContent: {
     width: "92%",
     backgroundColor: "#fff",
@@ -681,21 +416,21 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 12,
   },
-  errorText: { color: "#b71c1c", fontSize: 13, marginTop: 10 },
+  errorText: { color: "#DC2626", fontSize: 13, marginTop: 10 },
   modalActions: { flexDirection: "row", gap: 12, marginTop: 24, width: "100%" },
   cancelBtn: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F8FAFC",
     alignItems: "center",
   },
-  cancelBtnText: { fontSize: 15, fontWeight: "700", color: "#2e7d32" },
+  cancelBtnText: { fontSize: 15, fontWeight: "700", color: "#2563EB" },
   confirmBtn: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#2563EB",
     alignItems: "center",
   },
   confirmBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },

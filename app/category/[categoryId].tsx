@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,28 +11,225 @@ import {
   StatusBar,
   Modal,
   Platform,
-  Pressable
+  Pressable,
+  ActivityIndicator
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { MOCK_CATEGORIES, MOCK_SUBCATEGORIES, MOCK_SERVICES } from '../../utils/mockData';
 import { ServiceItem } from '../../types';
+import { ServiceItemResponse, api } from '../../services/api';
 import { useApp } from '../../context/AppContext';
 import { BlurView } from 'expo-blur';
 
 const { width } = Dimensions.get('window');
+
+const FALLBACK_BANNER =
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600';
+
+interface ApiSubCategory {
+  id: number;
+  name: string;
+  icon: string;
+  imageUrl?: string | null;
+}
+
+interface ApiCategory {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string;
+  image_url?: string | null;
+  professionals_count?: number;
+}
+
+function toServiceItem(s: ServiceItemResponse): ServiceItem {
+  return {
+    id: String(s.id),
+    subCategoryId: String(s.subcategory ?? s.category),
+    name: s.name,
+    rating: Number(s.rating),
+    reviewsCount: String(s.reviews_count ?? 0),
+    price: Number(s.price),
+    durationMinutes: s.duration_minutes,
+    descriptionPoints: s.description ? [s.description] : [],
+    image: s.images[0]?.url || FALLBACK_BANNER,
+    images: s.images.length ? s.images.map((img) => img.url) : [FALLBACK_BANNER],
+  };
+}
 
 export default function CategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams();
   const router = useRouter();
   const { cart, addToCart, removeFromCart, cartTotal, cartCount } = useApp();
 
-  const currentCategory = MOCK_CATEGORIES.find(c => c.id === categoryId) || MOCK_CATEGORIES[0];
-  const subCategories = MOCK_SUBCATEGORIES.filter(s => s.categoryId === currentCategory.id);
-  const [selectedSubCatId, setSelectedSubCatId] = useState(subCategories[0]?.id || MOCK_SUBCATEGORIES[0].id);
+  const [currentCategory, setCurrentCategory] = useState<ApiCategory | null>(
+    null,
+  );
+  const [apiSubCategories, setApiSubCategories] = useState<ApiSubCategory[]>([]);
+  const [selectedSubCatId, setSelectedSubCatId] = useState('');
+  const [displayedServices, setDisplayedServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(
+    null,
+  );
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const displayedServices = MOCK_SERVICES.filter(srv => srv.subCategoryId === selectedSubCatId || !selectedSubCatId);
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const loadServices = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    setApiSubCategories([]);
+    const requestedId = String(categoryId);
+    try {
+      const categories: ApiCategory[] = await api.getCategories();
+      const match =
+        categories.find((c) => String(c.id) === requestedId) ||
+        categories.find((c) => c.slug === requestedId) ||
+        null;
+      if (!match) {
+        setCurrentCategory(null);
+        setDisplayedServices([]);
+        return;
+      }
+      setCurrentCategory(match);
+      const services = await api.getServices({ category: match.id });
+      try {
+        const subcats: any[] = await api.getSubcategories({
+          category: match.id,
+        });
+        if (Array.isArray(subcats) && subcats.length > 0) {
+          const mapped: ApiSubCategory[] = subcats.map((s) => ({
+            id: Number(s.id),
+            name: s.name,
+            icon: s.icon || 'construct-outline',
+            imageUrl: s.image_url || null,
+          }));
+          setApiSubCategories(mapped);
+          setSelectedSubCatId(String(mapped[0].id));
+        }
+      } catch (e) {
+        console.warn('Failed fetching subcategories:', e);
+      }
+      setDisplayedServices(
+        (Array.isArray(services) ? services : []).map(toServiceItem),
+      );
+    } catch (e: any) {
+      console.warn('Failed fetching services:', e);
+      setLoadError('Could not load services. Check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  }, [categoryId]);
+
+  useEffect(() => {
+    loadServices();
+  }, [loadServices]);
+
+  const subCategories = apiSubCategories;
+
+  const visibleServices = apiSubCategories.length
+    ? displayedServices.filter(
+        (s) => !selectedSubCatId || s.subCategoryId === selectedSubCatId,
+      )
+    : displayedServices;
+
+  const serviceList = loading
+    ? null
+    : visibleServices.length === 0
+      ? (
+          <View style={styles.emptyServicesBox}>
+            <Ionicons name="file-tray-outline" size={36} color="#64748B" />
+            <Text style={styles.emptyServicesTitle}>
+              {loadError
+                ? 'Could not load services'
+                : displayedServices.length > 0
+                  ? 'No services in this subcategory yet'
+                  : 'No services yet'}
+            </Text>
+            <Text style={styles.emptyServicesText}>
+              {loadError ||
+                (displayedServices.length > 0
+                  ? 'Try another subcategory above.'
+                  : 'There are no services available in this category right now. Check back soon.')}
+            </Text>
+            {loadError ? (
+              <TouchableOpacity style={styles.retryBtn} onPress={loadServices}>
+                <Text style={styles.retryBtnText}>Retry</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        )
+      : visibleServices.map((service) => {
+          const cartItem = cart.find((item) => item.service.id === service.id);
+          const count = cartItem ? cartItem.quantity : 0;
+
+          return (
+            <View key={service.id} style={styles.serviceRow}>
+              <View style={styles.serviceRowLeft}>
+                <Text style={styles.serviceTitleText}>{service.name}</Text>
+                <View style={styles.serviceMetaRow}>
+                  <Ionicons name="star" size={12} color="#2563EB" />
+                  <Text style={styles.serviceRatingValue}>
+                    {service.rating}{' '}
+                    <Text style={styles.serviceReviewsCount}>
+                      {service.reviewsCount}
+                    </Text>
+                  </Text>
+                </View>
+                <Text style={styles.servicePriceValue}>
+                  UGX {service.price}{' '}
+                  <Text style={styles.dotSeparator}>•</Text> {service.durationMinutes}{' '}
+                  mins
+                </Text>
+
+                {service.descriptionPoints.map((point, index) => (
+                  <Text key={index} style={styles.bulletItemText}>
+                    • {point}
+                  </Text>
+                ))}
+
+                <TouchableOpacity onPress={() => {
+                  setActiveImageIndex(0);
+                  setSelectedService(service);
+                }}>
+                  <Text style={styles.viewDetailsActionText}>View details</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.serviceRowRight}>
+                <Image source={{ uri: service.image }} style={styles.serviceRowImage} />
+
+                {/* Micro Glass Action Controls Wrapper Layout */}
+                <View style={styles.absoluteButtonFrame}>
+                  {count > 0 ? (
+                    <View style={styles.interactiveCounterBox}>
+                      <TouchableOpacity
+                        style={styles.counterActionNode}
+                        onPress={() => removeFromCart(service.id)}
+                      >
+                        <Text style={styles.counterActionNodeText}>-</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.counterValueDisplay}>{count}</Text>
+                      <TouchableOpacity
+                        style={styles.counterActionNode}
+                        onPress={() => addToCart(service)}
+                      >
+                        <Text style={styles.counterActionNodeText}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.cleanAddButton}
+                      onPress={() => addToCart(service)}
+                    >
+                      <Text style={styles.cleanAddButtonText}>ADD</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            </View>
+          );
+        });
 
   return (
     <View style={styles.mainContainer}>
@@ -41,15 +238,15 @@ export default function CategoryDetailScreen() {
       {/* 1. FIXED GLASS NAVIGATION BAR */}
       <View style={styles.fixedNavBarRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconCircleButton}>
-          <Ionicons name="arrow-back" size={22} color="#1b5e20" />
+          <Ionicons name="arrow-back" size={22} color="#1E293B" />
         </TouchableOpacity>
-        <Text style={styles.navBarTitle} numberOfLines={1}>{currentCategory.name}</Text>
+        <Text style={styles.navBarTitle} numberOfLines={1}>{currentCategory?.name || 'Category'}</Text>
         <View style={styles.rightNavIcons}>
           <TouchableOpacity style={styles.iconCircleButton}>
-            <Ionicons name="search" size={20} color="#1b5e20" />
+            <Ionicons name="search" size={20} color="#1E293B" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconCircleButton}>
-            <Ionicons name="share-social-outline" size={20} color="#1b5e20" />
+            <Ionicons name="share-social-outline" size={20} color="#1E293B" />
           </TouchableOpacity>
         </View>
       </View>
@@ -60,27 +257,28 @@ export default function CategoryDetailScreen() {
         {/* 2. FULL WIDTH HERO BANNER IMAGE FRAME */}
         <View style={styles.fullWidthBannerContainer}>
           <Image
-            source={{ uri: currentCategory.bannerImage || 'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?q=80&w=600' }}
+            source={{ uri: currentCategory?.image_url || FALLBACK_BANNER }}
             style={styles.fullWidthBannerImage}
           />
         </View>
 
         {/* Rating Metrics Layer */}
         <View style={styles.ratingSummaryRow}>
-          <Ionicons name="star" size={14} color="#2e7d32" />
+          <Ionicons name="briefcase" size={14} color="#2563EB" />
           <Text style={styles.ratingTextMain}>
-            {currentCategory.rating} <Text style={styles.bookingCountText}>({currentCategory.totalBookings})</Text>
+            {currentCategory?.professionals_count ?? 0}{' '}
+            <Text style={styles.bookingCountText}>Pros available</Text>
           </Text>
         </View>
 
         {/* 3. Offer Badging Glass Micro Sliders */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersRowContainer}>
           <View style={styles.offerTagCard}>
-            <Ionicons name="pricetag" size={14} color="#2e7d32" style={{ marginRight: 6 }} />
+            <Ionicons name="pricetag" size={14} color="#2563EB" style={{ marginRight: 6 }} />
             <Text style={styles.offerTagText}>Get visitation fee off <Text style={styles.mutedText}>on orders above UGX499</Text></Text>
           </View>
           <View style={styles.offerTagCard}>
-            <Ionicons name="pricetag" size={14} color="#2e7d32" style={{ marginRight: 6 }} />
+            <Ionicons name="pricetag" size={14} color="#2563EB" style={{ marginRight: 6 }} />
             <Text style={styles.offerTagText}>Get UGX 50 coupon <Text style={styles.mutedText}>After first service</Text></Text>
           </View>
         </ScrollView>
@@ -88,15 +286,23 @@ export default function CategoryDetailScreen() {
         {/* 4. Subcategory Fluid Glass Grid Layout */}
         <View style={styles.subCatGridSection}>
           {subCategories.map((sub) => {
-            const isSelected = sub.id === selectedSubCatId;
+            const subId = String(sub.id);
+            const isSelected = subId === selectedSubCatId;
             return (
               <TouchableOpacity
-                key={sub.id}
+                key={subId}
                 style={styles.subCatGridCard}
-                onPress={() => setSelectedSubCatId(sub.id)}
+                onPress={() => setSelectedSubCatId(subId)}
               >
                 <View style={[styles.subCatCardImageContainer, isSelected && styles.selectedSubCatCardImageContainer]}>
-                  <Ionicons name={sub.icon as any || "construct-outline"} size={26} color={isSelected ? '#fff' : '#2e7d32'} />
+                  {sub.imageUrl ? (
+                    <Image
+                      source={{ uri: sub.imageUrl }}
+                      style={[styles.subCatCardImage, isSelected && styles.selectedSubCatCardImage]}
+                    />
+                  ) : (
+                    <Ionicons name={sub.icon as any || "construct-outline"} size={26} color={isSelected ? '#fff' : '#2563EB'} />
+                  )}
                 </View>
                 <Text style={[styles.subCatCardLabel, isSelected && styles.selectedSubCatCardLabel]}>{sub.name}</Text>
               </TouchableOpacity>
@@ -111,58 +317,21 @@ export default function CategoryDetailScreen() {
 
         {/* 5. Clean Glass Service Cards Wrapper Container */}
         <View style={styles.servicesContainer}>
-          {displayedServices.map((service) => {
-            const cartItem = cart.find(item => item.service.id === service.id);
-            const count = cartItem ? cartItem.quantity : 0;
-
-            return (
-              <View key={service.id} style={styles.serviceRow}>
-                <View style={styles.serviceRowLeft}>
-                  <Text style={styles.serviceTitleText}>{service.name}</Text>
-                  <View style={styles.serviceMetaRow}>
-                    <Ionicons name="star" size={12} color="#2e7d32" />
-                    <Text style={styles.serviceRatingValue}>{service.rating} <Text style={styles.serviceReviewsCount}>{service.reviewsCount}</Text></Text>
-                  </View>
-                  <Text style={styles.servicePriceValue}>UGX {service.price} <Text style={styles.dotSeparator}>•</Text> {service.durationMinutes} mins</Text>
-
-                  {service.descriptionPoints.map((point, index) => (
-                    <Text key={index} style={styles.bulletItemText}>• {point}</Text>
-                  ))}
-
-                  <TouchableOpacity onPress={() => setSelectedService(service)}><Text style={styles.viewDetailsActionText}>View details</Text></TouchableOpacity>
-                </View>
-
-                <View style={styles.serviceRowRight}>
-                  <Image source={{ uri: service.image }} style={styles.serviceRowImage} />
-
-                  {/* Micro Glass Action Controls Wrapper Layout */}
-                  <View style={styles.absoluteButtonFrame}>
-                    {count > 0 ? (
-                      <View style={styles.interactiveCounterBox}>
-                        <TouchableOpacity style={styles.counterActionNode} onPress={() => removeFromCart(service.id)}>
-                          <Text style={styles.counterActionNodeText}>-</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.counterValueDisplay}>{count}</Text>
-                        <TouchableOpacity style={styles.counterActionNode} onPress={() => addToCart(service)}>
-                          <Text style={styles.counterActionNodeText}>+</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity style={styles.cleanAddButton} onPress={() => addToCart(service)}>
-                        <Text style={styles.cleanAddButtonText}>ADD</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              </View>
-            );
-          })}
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color="#2563EB"
+              style={{ marginTop: 24 }}
+            />
+          ) : (
+            serviceList
+          )}
         </View>
       </ScrollView>
 
       {/* Persistent Translucent Bottom Footer Strip */}
       {/* <View style={styles.bottomOfferStrip}>
-        <Ionicons name="tag" size={14} color="#1b5e20" style={{ marginRight: 6 }} />
+        <Ionicons name="tag" size={14} color="#1E293B" style={{ marginRight: 6 }} />
         <Text style={styles.bottomOfferStripText}>Get visitation fee off on orders above UGX 499</Text>
       </View> */}
 
@@ -183,7 +352,7 @@ export default function CategoryDetailScreen() {
                   onPress={() => setSelectedService(null)}
                 >
                   <View style={styles.closeCircle}>
-                    <Ionicons name="close" size={22} color="#1b5e20" />
+                    <Ionicons name="close" size={22} color="#1E293B" />
                   </View>
                 </Pressable>
 
@@ -191,16 +360,61 @@ export default function CategoryDetailScreen() {
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.modalScrollContent}
                 >
-                  <Image
-                    source={{ uri: selectedService.image }}
-                    style={styles.modalImage}
-                    resizeMode="cover"
-                  />
+                  {selectedService.images.length > 1 ? (
+                    <View>
+                      <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onMomentumScrollEnd={(e) => {
+                          const newIndex = Math.round(
+                            e.nativeEvent.contentOffset.x /
+                              (width - 48),
+                          );
+                          setActiveImageIndex(
+                            Math.min(
+                              Math.max(newIndex, 0),
+                              selectedService.images.length - 1,
+                            ),
+                          );
+                        }}
+                      >
+                        {selectedService.images.map((img, index) => (
+                          <Image
+                            key={index}
+                            testID="modal-gallery-image"
+                            source={{ uri: img }}
+                            style={styles.modalImage}
+                            resizeMode="cover"
+                          />
+                        ))}
+                      </ScrollView>
+                      <View style={styles.modalImageDots}>
+                        {selectedService.images.map((_, index) => (
+                          <View
+                            key={index}
+                            testID="modal-gallery-dot"
+                            style={[
+                              styles.modalImageDot,
+                              index === activeImageIndex &&
+                                styles.modalImageDotActive,
+                            ]}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  ) : (
+                    <Image
+                      source={{ uri: selectedService.image }}
+                      style={styles.modalImage}
+                      resizeMode="cover"
+                    />
+                  )}
 
                   <Text style={styles.modalTitle}>{selectedService.name}</Text>
 
                   <View style={styles.modalRatingRow}>
-                    <Ionicons name="star" size={16} color="#f4b400" />
+                    <Ionicons name="star" size={16} color="#F59E0B" />
                     <Text style={styles.modalRatingText}>
                       {selectedService.rating}
                       <Text style={styles.modalReviews}> ({selectedService.reviewsCount} reviews)</Text>
@@ -244,10 +458,10 @@ export default function CategoryDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#e8f5e9' },
+  mainContainer: { flex: 1, backgroundColor: '#F8FAFC' },
   scrollBody: { flex: 0, backgroundColor: 'transparent' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#e8f5e9' },
-  errorText: { color: '#2e7d32', fontWeight: '600' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
+  errorText: { color: '#2563EB', fontWeight: '600' },
 
   // FIXED COMPONENT ALIGNMENT PROPERTIES
   fixedNavBarRow: {
@@ -266,7 +480,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.6)',
   },
-  navBarTitle: { fontSize: 18, fontWeight: '700', color: '#1b5e20', marginLeft: 8, flex: 1 },
+  navBarTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginLeft: 8, flex: 1 },
   rightNavIcons: { flexDirection: 'row', gap: 12 },
   iconCircleButton: { padding: 4 },
 
@@ -288,8 +502,8 @@ const styles = StyleSheet.create({
   },
 
   ratingSummaryRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 20 },
-  ratingTextMain: { fontSize: 14, fontWeight: '700', color: '#2e7d32', marginLeft: 4 },
-  bookingCountText: { fontWeight: '400', color: '#4c8c4a' },
+  ratingTextMain: { fontSize: 14, fontWeight: '700', color: '#2563EB', marginLeft: 4 },
+  bookingCountText: { fontWeight: '400', color: '#64748B' },
 
   offersRowContainer: { paddingLeft: 16, marginTop: 14, paddingBottom: 4, gap: 10 },
   offerTagCard: {
@@ -303,8 +517,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.45)',
     ...Platform.select({ android: { elevation: 0 } }),
   },
-  offerTagText: { fontSize: 12, fontWeight: '600', color: '#1b5e20' },
-  mutedText: { fontWeight: '400', color: '#4c8c4a' },
+  offerTagText: { fontSize: 12, fontWeight: '600', color: '#1E293B' },
+  mutedText: { fontWeight: '400', color: '#64748B' },
 
   subCatGridSection: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, paddingTop: 20, gap: 12 },
   subCatGridCard: { width: (width - 52) / 4, alignItems: 'center', marginBottom: 12 },
@@ -321,19 +535,53 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
     shadowRadius: 4,
-    elevation: 0
+    elevation: 0,
+    overflow: 'hidden',
+  },
+  subCatCardImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  selectedSubCatCardImage: {
+    opacity: 0.85,
   },
   selectedSubCatCardImageContainer: {
-    backgroundColor: '#2e7d32',
-    borderColor: '#2e7d32',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
-  subCatCardLabel: { fontSize: 11, fontWeight: '600', color: '#4c8c4a', marginTop: 6, textAlign: 'center' },
-  selectedSubCatCardLabel: { color: '#1b5e20', fontWeight: '700' },
+  subCatCardLabel: { fontSize: 11, fontWeight: '600', color: '#64748B', marginTop: 6, textAlign: 'center' },
+  selectedSubCatCardLabel: { color: '#1E293B', fontWeight: '700' },
 
   listSectionHeader: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8 },
-  listSectionTitle: { fontSize: 18, fontWeight: '700', color: '#1b5e20' },
+  listSectionTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
 
   servicesContainer: { paddingBottom: 120, paddingHorizontal: 16, gap: 12 },
+  emptyServicesBox: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  emptyServicesTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  emptyServicesText: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  retryBtn: {
+    marginTop: 12,
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   serviceRow: {
     flexDirection: 'row',
     padding: 16,
@@ -348,14 +596,14 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { elevation: 0 } }),
   },
   serviceRowLeft: { flex: 1, paddingRight: 12 },
-  serviceTitleText: { fontSize: 16, fontWeight: '700', color: '#1b5e20', marginBottom: 4 },
+  serviceTitleText: { fontSize: 16, fontWeight: '700', color: '#1E293B', marginBottom: 4 },
   serviceMetaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  serviceRatingValue: { fontSize: 12, fontWeight: '700', color: '#2e7d32', marginLeft: 4 },
-  serviceReviewsCount: { fontWeight: '400', color: '#4c8c4a' },
+  serviceRatingValue: { fontSize: 12, fontWeight: '700', color: '#2563EB', marginLeft: 4 },
+  serviceReviewsCount: { fontWeight: '400', color: '#64748B' },
   servicePriceValue: { fontSize: 15, fontWeight: '700', color: '#000', marginBottom: 8 },
-  dotSeparator: { color: '#4c8c4a' },
-  bulletItemText: { fontSize: 12, color: '#388e3c', marginBottom: 2, lineHeight: 16 },
-  viewDetailsActionText: { color: '#2e7d32', fontSize: 13, fontWeight: '700', marginTop: 6 },
+  dotSeparator: { color: '#64748B' },
+  bulletItemText: { fontSize: 12, color: '#2563EB', marginBottom: 2, lineHeight: 16 },
+  viewDetailsActionText: { color: '#2563EB', fontSize: 13, fontWeight: '700', marginTop: 6 },
 
   serviceRowRight: { width: 100, height: 100, position: 'relative', justifyContent: 'center', alignItems: 'center' },
   serviceRowImage: { width: 100, height: 100, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.3)' },
@@ -380,11 +628,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignItems: 'center',
   },
-  cleanAddButtonText: { color: '#2e7d32', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 },
+  cleanAddButtonText: { color: '#2563EB', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 },
 
   interactiveCounterBox: {
     flexDirection: 'row',
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2563EB',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -407,7 +655,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)'
   },
-  bottomOfferStripText: { fontSize: 11, color: '#1b5e20', fontWeight: '600' },
+  bottomOfferStripText: { fontSize: 11, color: '#1E293B', fontWeight: '600' },
 
   // Modal Styles
   modalOverlay: {
@@ -456,17 +704,37 @@ closeCircle: {
 },
 
   modalImage: {
-  width: '100%',
+  width: width - 48,
   height: 220,
   borderRadius: 20,
   marginBottom: 20,
-  backgroundColor: '#c8e6c9',
+  backgroundColor: '#E2E8F0',
+},
+
+modalImageDots: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  gap: 6,
+  marginBottom: 20,
+  marginTop: -8,
+},
+
+modalImageDot: {
+  width: 7,
+  height: 7,
+  borderRadius: 3.5,
+  backgroundColor: 'rgba(37, 99, 235, 0.2)',
+},
+
+modalImageDotActive: {
+  backgroundColor: '#2563EB',
+  width: 18,
 },
 
 modalTitle: {
   fontSize: 24,
   fontWeight: '700',
-  color: '#1b5e20',
+  color: '#1E293B',
   lineHeight: 28,
   marginBottom: 8,
 },
@@ -479,45 +747,45 @@ modalRatingRow: {
 modalRatingText: {
   fontSize: 16,
   fontWeight: '600',
-  color: '#2e7d32',
+  color: '#2563EB',
   marginLeft: 6,
 },
 
 modalReviews: {
   fontWeight: '500',
-  color: '#4c8c4a',
+  color: '#64748B',
   fontSize: 15,
 },
 
 modalPrice: {
   fontSize: 20,
   fontWeight: '700',
-  color: '#1b5e20',
+  color: '#1E293B',
   marginBottom: 20,
 },
 
 modalDuration: {
   fontSize: 16,
   fontWeight: '500',
-  color: '#4c8c4a',
+  color: '#64748B',
 },
 
 modalDivider: {
   height: 1,
-  backgroundColor: 'rgba(46, 125, 50, 0.15)',
+  backgroundColor: 'rgba(37, 99, 235, 0.1)',
   marginVertical: 20,
 },
 
 modalSectionTitle: {
   fontSize: 17,
   fontWeight: '700',
-  color: '#1b5e20',
+  color: '#1E293B',
   marginBottom: 14,
 },
 
 modalBullet: {
   fontSize: 15,
-  color: '#388e3c',
+  color: '#2563EB',
   lineHeight: 22,
   marginBottom: 10,
   paddingLeft: 4,
@@ -535,11 +803,11 @@ modalButtonContainer: {
 },
 
 modalAddBtn: {
-  backgroundColor: '#2e7d32',
+  backgroundColor: '#2563EB',
   borderRadius: 16,
   paddingVertical: 16,
   alignItems: 'center',
-  shadowColor: '#2e7d32',
+  shadowColor: '#2563EB',
   shadowOffset: { width: 0, height: 6 },
   shadowOpacity: 0.3,
   shadowRadius: 12,

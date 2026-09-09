@@ -31,6 +31,8 @@ export interface UserProfile {
   last_name: string;
   phone_number?: string;
   reliability_score?: number;
+  reliability_strikes?: number;
+  reliability_band?: string;
   is_verified?: boolean;
 }
 
@@ -83,6 +85,12 @@ interface AppContextType {
     description?: string,
   ) => Promise<any>;
   processCheckoutPayment: (phone: string, method?: string) => Promise<any>;
+
+  // Escrow & ledger
+  escrowFeeRate: number;
+  serviceFee: number;
+  grandTotal: number;
+  refreshAssetBalances: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -99,6 +107,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const [assets, setAssets] = useState<Asset[]>([]);
   const [activeAsset, setActiveAsset] = useState<Asset | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+
+  // Escrow terms, sourced from the backend config endpoint (default 5%).
+  const [escrowFeeRate, setEscrowFeeRate] = useState(5);
 
   const STORAGE_KEY_ASSETS = "@homebase_os:cached_assets";
   const STORAGE_KEY_ACTIVE_ID = "@homebase_os:active_asset_id";
@@ -153,16 +164,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
             backendId: raw.id,
             name: raw.name,
             type: assetType,
-            role: raw.owner === userProfile?.id ? "OWNER" : "TENANT",
-            scopes: ["*"],
-            balance:
-              raw.asset_type === "construction_site"
-                ? 8500000
-                : raw.asset_type === "estate"
-                  ? 18800000
-                  : raw.asset_type === "rental_unit"
-                    ? 800000
-                    : 1420000,
+            role:
+              raw.my_role === "owner"
+                ? "OWNER"
+                : (raw.my_role || "tenant").toUpperCase(),
+            scopes:
+              Array.isArray(raw.scopes) && raw.scopes.length
+                ? raw.scopes
+                : ["*"],
+            balance: 0,
             location: raw.location || "",
           };
         });
@@ -172,6 +182,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
           STORAGE_KEY_ASSETS,
           JSON.stringify(mappedAssets),
         );
+
+        await refreshAssetBalances(mappedAssets);
 
         const storedActiveId = await AsyncStorage.getItem(
           STORAGE_KEY_ACTIVE_ID,
@@ -190,14 +202,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.warn("Backend assets fetch failed:", error);
       setIsOffline(true);
+
+      // Offline-first: restore the last-known cached asset session.
+      try {
+        const cachedRaw = await AsyncStorage.getItem(STORAGE_KEY_ASSETS);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          if (Array.isArray(cached) && cached.length > 0) {
+            setAssets(cached);
+            const storedActiveId = await AsyncStorage.getItem(
+              STORAGE_KEY_ACTIVE_ID,
+            );
+            const match =
+              cached.find((a) => a.id === storedActiveId) || cached[0];
+            setActiveAsset(match);
+            return;
+          }
+        }
+      } catch (cacheError) {
+        console.warn("Cached assets restore failed:", cacheError);
+      }
+
       setAssets([]);
       setActiveAsset(null);
       return;
     }
   };
 
+  // Pull real per-asset ledger balances from the backend and merge them into
+  // the asset list. Falls back to the last-known cached balance when the
+  // ledger API is unreachable (offline).
+  const refreshAssetBalances = async (assetList: Asset[] = assets) => {
+    if (!assetList.length) return;
+    let updated = assetList;
+    try {
+      const withBalances = await Promise.all(
+        assetList.map(async (asset) => {
+          if (!asset.backendId) return asset;
+          try {
+            const ledger = await api.getLedgerByAsset(asset.backendId);
+            const balance = Number(ledger.running_balance ?? 0);
+            return Number.isFinite(balance) ? { ...asset, balance } : asset;
+          } catch (e) {
+            return asset;
+          }
+        }),
+      );
+      updated = withBalances;
+      setAssets(withBalances);
+      setActiveAsset((current) =>
+        current
+          ? withBalances.find((a) => a.id === current.id) || current
+          : current,
+      );
+      await AsyncStorage.setItem(
+        STORAGE_KEY_ASSETS,
+        JSON.stringify(withBalances),
+      );
+    } catch (error) {
+      console.warn("Ledger balance fetch failed:", error);
+      return;
+    }
+  };
+
   useEffect(() => {
     fetchAssetsFromBackend();
+  }, [isAuthenticated]);
+
+  // Pull the platform escrow terms from the backend config endpoint.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    (async () => {
+      try {
+        const config = await api.getEscrowConfig();
+        if (typeof config?.fee_rate === "number") {
+          setEscrowFeeRate(config.fee_rate);
+        }
+      } catch (e) {
+        console.warn("Escrow config fetch failed:", e);
+      }
+    })();
   }, [isAuthenticated]);
 
   // Cart operations
@@ -343,20 +427,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     phone: string,
     method: string = "mobile_money",
   ) => {
-    const serviceFee = Math.round(cartTotal * 0.05);
-    const grandTotal = cartTotal + serviceFee;
-
     const paymentRes = await api.initializePayment({
-      amount: grandTotal,
+      amount: cartTotal,
       currency: "UGX",
       payment_method: method,
       phone_number: phone,
       description: `Homebase OS Cart Purchase (${cartCount} items)`,
       asset_id: activeAsset?.backendId,
+      transaction_type: "service",
     });
 
     return paymentRes;
   };
+
+  // Escrow fee & grand total derived from the backend fee rate (default 5%).
+  const serviceFee = Math.round(cartTotal * (escrowFeeRate / 100));
+  const grandTotal = cartTotal + serviceFee;
 
   return (
     <AppContext.Provider
@@ -382,6 +468,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         createMaintenanceRequest,
         createBookingOrder,
         processCheckoutPayment,
+        escrowFeeRate,
+        serviceFee,
+        grandTotal,
+        refreshAssetBalances,
       }}
     >
       {children}

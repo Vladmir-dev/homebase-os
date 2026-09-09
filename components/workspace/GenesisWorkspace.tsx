@@ -27,6 +27,7 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
   const [cameras, setCameras] = useState<any[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [budget, setBudget] = useState<any>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
 
   // Diary modal state
@@ -50,12 +51,15 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
     setLoading(true);
     try {
       const siteBackendId = activeAsset?.backendId;
-      const [phasesData, diaryData, camerasData, deliveryData, attendanceData] = await Promise.all([
+      const [phasesData, diaryData, camerasData, deliveryData, attendanceData, budgetData] = await Promise.all([
         api.getProjectPhases(siteBackendId).catch(() => []),
         api.getSiteDiary(siteBackendId).catch(() => []),
         api.getSiteCameras(siteBackendId).catch(() => []),
         api.getMaterialDeliveries().catch(() => []),
         api.getLaborAttendance(siteBackendId).catch(() => []),
+        siteBackendId
+          ? api.getConstructionBudget(siteBackendId).catch(() => null)
+          : Promise.resolve(null),
       ]);
 
       if (Array.isArray(phasesData)) setPhases(phasesData);
@@ -63,6 +67,7 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
       if (Array.isArray(camerasData)) setCameras(camerasData);
       if (Array.isArray(deliveryData)) setDeliveries(deliveryData);
       if (Array.isArray(attendanceData)) setAttendance(attendanceData);
+      if (budgetData) setBudget(budgetData);
     } catch (e) {
       console.warn("Failed loading construction workspace data:", e);
     } finally {
@@ -199,7 +204,7 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2e7d32" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text style={styles.loadingText}>Syncing Site Data & Cameras...</Text>
       </View>
     );
@@ -233,22 +238,22 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
       {/* RECONCILIATION FRAUD UTILITIES */}
       <View style={styles.fraudRowGrid}>
         <TouchableOpacity style={styles.fraudUtilityCard} onPress={() => setShowDiaryModal(true)}>
-          <Ionicons name="journal-outline" size={22} color="#2e7d32" />
+          <Ionicons name="journal-outline" size={22} color="#2563EB" />
           <Text style={styles.fraudCardLabel}>Log Site Diary</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.fraudUtilityCard} onPress={() => setShowDeliveryModal(true)}>
-          <Ionicons name="qr-code-outline" size={22} color="#2e7d32" />
+          <Ionicons name="qr-code-outline" size={22} color="#2563EB" />
           <Text style={styles.fraudCardLabel}>Log Delivery QR</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.fraudRowGrid}>
         <TouchableOpacity style={styles.fraudUtilityCard} onPress={handleAttendanceCheckIn}>
-          {busyAction === "attendance" ? <ActivityIndicator color="#2e7d32" /> : <Ionicons name="finger-print-outline" size={22} color="#2e7d32" />}
+          {busyAction === "attendance" ? <ActivityIndicator color="#2563EB" /> : <Ionicons name="finger-print-outline" size={22} color="#2563EB" />}
           <Text style={styles.fraudCardLabel}>Worker Check-in</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.fraudUtilityCard} onPress={handleHandoverReport}>
-          {busyAction === "handover" ? <ActivityIndicator color="#2e7d32" /> : <Ionicons name="folder-open-outline" size={22} color="#2e7d32" />}
+          {busyAction === "handover" ? <ActivityIndicator color="#2563EB" /> : <Ionicons name="folder-open-outline" size={22} color="#2563EB" />}
           <Text style={styles.fraudCardLabel}>Handover Pack</Text>
         </TouchableOpacity>
       </View>
@@ -257,7 +262,7 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
       {diaryEntries.length > 0 && (
         <View style={styles.diaryBox}>
           <Text style={styles.diaryHeading}>Latest Site Diary Entry ({diaryEntries[0].entry_date})</Text>
-          <Text style={styles.diaryText}>Weather: {diaryEntries[0].weather || 'Sunny'} | Workers: {diaryEntries[0].workers_count || 14}</Text>
+          <Text style={styles.diaryText}>Weather: {diaryEntries[0].weather || "—"} | Workers: {diaryEntries[0].workers_count ?? 0}</Text>
           <Text style={styles.diaryNotes}>"{diaryEntries[0].notes}"</Text>
         </View>
       )}
@@ -273,13 +278,65 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
         </View>
       </View>
 
+      {/* BUDGET VS ACTUAL */}
+      {budget && (
+        <View style={styles.diaryBox}>
+          <View style={styles.budgetHeaderRow}>
+            <Text style={styles.diaryHeading}>Budget vs Actual Spend</Text>
+            <View
+              style={[
+                styles.budgetBadge,
+                budget.on_track
+                  ? styles.budgetBadgeOnTrack
+                  : styles.budgetBadgeOver,
+              ]}
+            >
+              <Ionicons
+                name={budget.on_track ? "checkmark-circle" : "warning"}
+                size={12}
+                color={budget.on_track ? "#2563EB" : "#c62828"}
+              />
+              <Text
+                style={[
+                  styles.budgetBadgeText,
+                  { color: budget.on_track ? "#2563EB" : "#c62828" },
+                ]}
+              >
+                {budget.on_track ? "ON TRACK" : "OVER BUDGET"}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.budgetLine}>
+            Planned: UGX {Number(budget.budget_planned || 0).toLocaleString()}
+          </Text>
+          <Text style={styles.budgetLine}>
+            Actual (deliveries): UGX {Number(budget.delivery_spend || 0).toLocaleString()}
+          </Text>
+          <Text style={styles.budgetLine}>
+            Remaining: UGX {Number(budget.remaining || 0).toLocaleString()} • {budget.percent_spent}% spent
+          </Text>
+          <View style={styles.budgetBarTrack}>
+            <View
+              style={[
+                styles.budgetBarFill,
+                { width: `${Math.min(Number(budget.percent_spent) || 0, 100)}%` },
+              ]}
+            />
+          </View>
+        </View>
+      )}
+
       {/* LOCKED CONSTRAINTS PROGRESS MATRIX */}
       <Text style={styles.sectionHeading}>Structural Milestones ({phases.length})</Text>
 
       {phases.length > 0 ? (
         phases.map((phase, idx) => {
           const isCompleted = phase.status === 'completed';
-          const isPending = phase.status === 'pending' || phase.status === 'in_progress';
+          const isLocked = phase.status === 'pending';
+          const phaseBudget = (budget?.phases || []).find(
+            (entry: any) => String(entry.id) === String(phase.id)
+          );
+          const deliverySpend = Number(phaseBudget?.delivery_spend || phase.actual_cost || 0);
           return (
             <View key={phase.id} style={styles.timelineNode}>
               <View style={styles.iconColumn}>
@@ -287,14 +344,16 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
                   style={[
                     styles.statusNodeCircle,
                     isCompleted
-                      ? { backgroundColor: "#e8f5e9" }
-                      : { backgroundColor: "#ffebee", borderColor: "#d32f2f", borderWidth: 1 },
+                      ? { backgroundColor: "#F8FAFC" }
+                      : isLocked
+                      ? { backgroundColor: "#ffebee", borderColor: "#d32f2f", borderWidth: 1 }
+                      : { backgroundColor: "#fff3e0", borderColor: "#ef6c00", borderWidth: 1 },
                   ]}
                 >
                   <Ionicons
-                    name={isCompleted ? "checkmark" : "lock-closed"}
+                    name={isCompleted ? "checkmark" : isLocked ? "lock-closed" : "construct"}
                     size={15}
-                    color={isCompleted ? "#2e7d32" : "#d32f2f"}
+                    color={isCompleted ? "#2563EB" : isLocked ? "#d32f2f" : "#ef6c00"}
                   />
                 </View>
                 {idx < phases.length - 1 && <View style={styles.timelineTailLine} />}
@@ -304,13 +363,17 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
                 <Text
                   style={[
                     styles.milestoneStatusMeta,
-                    isCompleted ? { color: "#2e7d32" } : { color: "#c62828" },
+                    isCompleted ? { color: "#2563EB" } : isLocked ? { color: "#c62828" } : { color: "#ef6c00" },
                   ]}
                 >
-                  {isCompleted ? "Verified and completed" : "Structural milestone pending"}
+                  {isCompleted
+                    ? "Verified and completed"
+                    : isLocked
+                    ? "Structural milestone pending"
+                    : "In progress — awaiting engineer review"}
                 </Text>
                 <Text style={styles.metaSubtext}>
-                  Planned Budget: UGX {parseFloat(phase.planned_cost || 0).toLocaleString()}
+                  Planned: UGX {parseFloat(phase.planned_cost || 0).toLocaleString()} • Spent: UGX {deliverySpend.toLocaleString()}
                 </Text>
                 {!isCompleted && (
                   <TouchableOpacity style={styles.phaseActionButton} onPress={() => handlePhaseAction(phase)} disabled={busyAction === `phase-${phase.id}`}>
@@ -328,41 +391,13 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
           );
         })
       ) : (
-        <>
-          {/* Milestone 1: Passed */}
-          <View style={styles.timelineNode}>
-            <View style={styles.iconColumn}>
-              <View style={[styles.statusNodeCircle, { backgroundColor: "#e8f5e9" }]}>
-                <Ionicons name="checkmark" size={16} color="#2e7d32" />
-              </View>
-              <View style={styles.timelineTailLine} />
-            </View>
-            <View style={styles.timelineContentCard}>
-              <Text style={styles.milestoneTitle}>Foundation Excavation</Text>
-              <Text style={styles.milestoneStatusMeta}>Visual Chain Verified</Text>
-            </View>
-          </View>
-
-          {/* Milestone 2: Hard Blocked */}
-          <View style={styles.timelineNode}>
-            <View style={styles.iconColumn}>
-              <View
-                style={[
-                  styles.statusNodeCircle,
-                  { backgroundColor: "#ffebee", borderColor: "#d32f2f", borderWidth: 1 },
-                ]}
-              >
-                <Ionicons name="lock-closed" size={14} color="#d32f2f" />
-              </View>
-            </View>
-            <View style={[styles.timelineContentCard, styles.lockedContentCard]}>
-              <Text style={styles.milestoneTitle}>Slab Structural Pour</Text>
-              <Text style={[styles.milestoneStatusMeta, { color: "#c62828" }]}>
-                Locked: Structural Dependency Gate
-              </Text>
-            </View>
-          </View>
-        </>
+        <View style={styles.diaryBox}>
+          <Text style={styles.emptyStateTitle}>No Structural Milestones Synced</Text>
+          <Text style={styles.emptyStateText}>
+            No construction phases have been created for this site yet. Create a phase to
+            unlock milestone tracking, engineer review, and budget tracking.
+          </Text>
+        </View>
       )}
 
       {/* Diary Entry Modal */}
@@ -448,7 +483,7 @@ export default function GenesisWorkspace({ role, assetId }: WorkspaceProps) {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 16, marginTop: 12 },
   loadingContainer: { padding: 32, alignItems: 'center' },
-  loadingText: { marginTop: 8, color: '#2e7d32', fontWeight: '600' },
+  loadingText: { marginTop: 8, color: '#2563EB', fontWeight: '600' },
   sectionHeading: { fontSize: 20, fontWeight: "700", color: "#1a3b1c", marginBottom: 12, marginTop: 12 },
   
   cameraFrame: { width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 16, backgroundColor: "#000" },
@@ -461,17 +496,29 @@ const styles = StyleSheet.create({
   fraudRowGrid: { flexDirection: "row", gap: 12, marginBottom: 16 },
   fraudUtilityCard: {
     flex: 1, backgroundColor: "#fff", padding: 14, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderColor: "rgba(46, 125, 50, 0.15)",
+    alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderColor: "rgba(37, 99, 235, 0.15)",
   },
-  fraudCardLabel: { fontSize: 12, fontWeight: "700", color: "#1b5e20" },
+  fraudCardLabel: { fontSize: 12, fontWeight: "700", color: "#1E293B" },
 
-  diaryBox: { backgroundColor: "#fff", padding: 14, borderRadius: 14, marginBottom: 16, borderWidth: 1, borderColor: "rgba(46, 125, 50, 0.2)" },
-  diaryHeading: { fontSize: 13, fontWeight: "700", color: "#1b5e20", marginBottom: 4 },
-  diaryText: { fontSize: 12, color: "#4c8c4a", fontWeight: "600", marginBottom: 4 },
+  diaryBox: { backgroundColor: "#fff", padding: 14, borderRadius: 14, marginBottom: 16, borderWidth: 1, borderColor: "rgba(37, 99, 235, 0.2)" },
+  diaryHeading: { fontSize: 13, fontWeight: "700", color: "#1E293B", marginBottom: 4 },
+  diaryText: { fontSize: 12, color: "#64748B", fontWeight: "600", marginBottom: 4 },
   diaryNotes: { fontSize: 12, color: "#333", italic: true } as any,
 
+  budgetHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  budgetBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  budgetBadgeOnTrack: { backgroundColor: "#F8FAFC" },
+  budgetBadgeOver: { backgroundColor: "#ffebee" },
+  budgetBadgeText: { fontSize: 10, fontWeight: "800" },
+  budgetLine: { fontSize: 12, color: "#444", fontWeight: "600", marginTop: 4 },
+  budgetBarTrack: { height: 8, borderRadius: 4, backgroundColor: "#e8e8e8", marginTop: 10, overflow: "hidden" },
+  budgetBarFill: { height: "100%", borderRadius: 4, backgroundColor: "#2563EB" },
+
+  emptyStateTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 4 },
+  emptyStateText: { fontSize: 12, color: "#666", lineHeight: 18 },
+
   siteOpsGrid: { flexDirection: "row", gap: 12, marginBottom: 16 },
-  siteOpsCard: { flex: 1, backgroundColor: "#1b5e20", borderRadius: 8, padding: 14, alignItems: "center" },
+  siteOpsCard: { flex: 1, backgroundColor: "#1E293B", borderRadius: 8, padding: 14, alignItems: "center" },
   siteOpsValue: { color: "#fff", fontSize: 21, fontWeight: "800" },
   siteOpsLabel: { color: "#c8e6c9", fontSize: 11, fontWeight: "800", textTransform: "uppercase", marginTop: 3 },
 
@@ -479,21 +526,21 @@ const styles = StyleSheet.create({
   iconColumn: { alignItems: "center", marginRight: 12 },
   statusNodeCircle: { width: 30, height: 30, borderRadius: 15, justifyContent: "center", alignItems: "center" },
   timelineTailLine: { width: 2, flex: 1, backgroundColor: "#c8e6c9", marginVertical: 4 },
-  timelineContentCard: { flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "rgba(46, 125, 50, 0.15)" },
+  timelineContentCard: { flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "rgba(37, 99, 235, 0.15)" },
   lockedContentCard: { backgroundColor: "#fafafa" },
-  milestoneTitle: { fontSize: 15, fontWeight: "700", color: "#1b5e20", marginBottom: 4 },
-  milestoneStatusMeta: { fontSize: 12, fontWeight: "600", color: "#4c8c4a" },
+  milestoneTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 4 },
+  milestoneStatusMeta: { fontSize: 12, fontWeight: "600", color: "#64748B" },
   metaSubtext: { fontSize: 12, color: "#666", marginTop: 4 },
-  phaseActionButton: { minHeight: 40, borderRadius: 8, backgroundColor: "#2e7d32", alignItems: "center", justifyContent: "center", marginTop: 12 },
+  phaseActionButton: { minHeight: 40, borderRadius: 8, backgroundColor: "#2563EB", alignItems: "center", justifyContent: "center", marginTop: 12 },
   phaseActionText: { color: "#fff", fontSize: 13, fontWeight: "800" },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
   modalCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#1b5e20', marginBottom: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B', marginBottom: 16 },
   modalInput: { backgroundColor: '#f0f4f1', borderRadius: 12, padding: 12, marginBottom: 12, fontSize: 14 },
   modalActionsRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   modalCancelBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12, backgroundColor: '#f5f5f5' },
   modalCancelText: { color: '#666', fontWeight: '700' },
-  modalSubmitBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12, backgroundColor: '#2e7d32' },
+  modalSubmitBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12, backgroundColor: '#2563EB' },
   modalSubmitText: { color: '#fff', fontWeight: '700' },
 });

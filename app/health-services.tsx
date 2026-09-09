@@ -25,10 +25,15 @@ export default function HealthServicesScreen() {
   const [activePanel, setActivePanel] = useState<Panel>('symptoms');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(['fever']);
   const [symptomResult, setSymptomResult] = useState<any[]>([]);
-  const [pharmacies, setPharmacies] = useState<any[]>([]);
+  const [triage, setTriage] = useState<any>(null);
+  const [age, setAge] = useState("");
+  const [durationDays, setDurationDays] = useState("");
+  const [pharmacyDiscovery, setPharmacyDiscovery] = useState<any[]>([]);
   const [medicines, setMedicines] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [dispatches, setDispatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [location, setLocation] = useState(activeAsset?.location || 'Kampala');
@@ -36,16 +41,20 @@ export default function HealthServicesScreen() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pharmacyData, medicineData, doctorData, bookingData] = await Promise.all([
-        api.getPharmacies().catch(() => []),
+      const [medicineData, doctorData, bookingData, pharmacyDiscovery, prescriptionData, dispatchData] = await Promise.all([
         api.getMedicines().catch(() => []),
         api.getDoctors().catch(() => []),
         api.getHealthBookings(userProfile?.id).catch(() => []),
+        api.discoverPharmacies(activeAsset?.location || 'Kampala').catch(() => ({ results: [] })),
+        api.getPrescriptions().catch(() => []),
+        api.getAmbulanceDispatches(userProfile?.id).catch(() => []),
       ]);
-      setPharmacies(Array.isArray(pharmacyData) ? pharmacyData : []);
       setMedicines(Array.isArray(medicineData) ? medicineData : []);
       setDoctors(Array.isArray(doctorData) ? doctorData : []);
       setBookings(Array.isArray(bookingData) ? bookingData : []);
+      setPrescriptions(Array.isArray(prescriptionData) ? prescriptionData : []);
+      setDispatches(Array.isArray(dispatchData) ? dispatchData : []);
+      setPharmacyDiscovery(Array.isArray(pharmacyDiscovery?.results) ? pharmacyDiscovery.results : []);
     } finally {
       setLoading(false);
     }
@@ -56,11 +65,12 @@ export default function HealthServicesScreen() {
   }, [userProfile?.id]);
 
   const severity = useMemo(() => {
+    if (triage?.severity) return triage.severity;
     const order = ['low', 'medium', 'high', 'emergency'];
     return symptomResult.reduce((highest, item) => {
       return order.indexOf(item.severity) > order.indexOf(highest) ? item.severity : highest;
     }, 'low');
-  }, [symptomResult]);
+  }, [triage, symptomResult]);
 
   const severityStyle = {
     low: styles.severity_low,
@@ -82,10 +92,28 @@ export default function HealthServicesScreen() {
     }
     setBusyAction('symptoms');
     try {
-      const result = await api.checkSymptoms(selectedSymptoms);
+      const result = await api.triageSymptoms({
+        symptoms: selectedSymptoms,
+        age: age ? Number(age) : undefined,
+        duration_days: durationDays ? Number(durationDays) : undefined,
+      });
+      setTriage(result);
       setSymptomResult(Array.isArray(result.results) ? result.results : []);
     } catch (error: any) {
       Alert.alert('Check Failed', error.message || 'Could not check symptoms.');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const cancelBooking = async (booking: any) => {
+    setBusyAction(`cancel-${booking.id}`);
+    try {
+      await api.cancelHealthBooking(booking.id);
+      Alert.alert('Booking Cancelled', 'The health booking has been cancelled.');
+      loadData();
+    } catch (error: any) {
+      Alert.alert('Cancel Failed', error.message || 'Could not cancel this booking.');
     } finally {
       setBusyAction(null);
     }
@@ -154,7 +182,7 @@ export default function HealthServicesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#1b5e20" />
+          <Ionicons name="chevron-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Health Services</Text>
@@ -169,7 +197,7 @@ export default function HealthServicesScreen() {
             style={[styles.panelTab, activePanel === panel.id && styles.panelTabActive]}
             onPress={() => setActivePanel(panel.id)}
           >
-            <Ionicons name={panel.icon} size={17} color={activePanel === panel.id ? '#fff' : '#2e7d32'} />
+            <Ionicons name={panel.icon} size={17} color={activePanel === panel.id ? '#fff' : '#2563EB'} />
             <Text style={activePanel === panel.id ? styles.panelTabTextActive : styles.panelTabText}>{panel.label}</Text>
           </TouchableOpacity>
         ))}
@@ -177,7 +205,7 @@ export default function HealthServicesScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2e7d32" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Syncing health network...</Text>
         </View>
       ) : (
@@ -187,6 +215,25 @@ export default function HealthServicesScreen() {
               <View style={[styles.severityBand, severityStyle]}>
                 <Text style={styles.severityLabel}>Current Triage</Text>
                 <Text style={styles.severityValue}>{severity.toUpperCase()}</Text>
+                {triage && (
+                  <Text style={styles.severityRisk}>Risk score {triage.risk_score}/100</Text>
+                )}
+              </View>
+              <View style={styles.formRow}>
+                <TextInput
+                  value={age}
+                  onChangeText={setAge}
+                  keyboardType="numeric"
+                  style={styles.input}
+                  placeholder="Age"
+                />
+                <TextInput
+                  value={durationDays}
+                  onChangeText={setDurationDays}
+                  keyboardType="numeric"
+                  style={styles.input}
+                  placeholder="Sick (days)"
+                />
               </View>
               <View style={styles.symptomGrid}>
                 {SYMPTOM_OPTIONS.map((symptom) => (
@@ -203,8 +250,29 @@ export default function HealthServicesScreen() {
               </View>
               <TouchableOpacity style={styles.primaryButton} onPress={checkSymptoms} disabled={busyAction === 'symptoms'}>
                 {busyAction === 'symptoms' ? <ActivityIndicator color="#fff" /> : <Ionicons name="pulse-outline" size={17} color="#fff" />}
-                <Text style={styles.primaryButtonText}>Run Symptom Check</Text>
+                <Text style={styles.primaryButtonText}>Run Triage Check</Text>
               </TouchableOpacity>
+              {triage?.summary && (
+                <View style={styles.summaryPanel}>
+                  <Ionicons name="medical-outline" size={18} color="#2563EB" />
+                  <Text style={styles.summaryText}>{triage.summary}</Text>
+                </View>
+              )}
+              {triage?.providers?.length > 0 && (
+                <View style={styles.providerRow}>
+                  {triage.providers.map((provider: string) => (
+                    <View key={provider} style={styles.providerChip}>
+                      <Text style={styles.providerChipText}>{provider.replace(/_/g, ' ')}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+              {severity === 'emergency' && (
+                <TouchableOpacity style={styles.sosButton} onPress={requestAmbulance} disabled={busyAction === 'ambulance'}>
+                  {busyAction === 'ambulance' ? <ActivityIndicator color="#fff" /> : <Ionicons name="call-outline" size={19} color="#fff" />}
+                  <Text style={styles.sosButtonText}>Dispatch Ambulance Now</Text>
+                </TouchableOpacity>
+              )}
               {symptomResult.map((result) => (
                 <View key={result.symptom} style={styles.itemCard}>
                   <View style={styles.itemHeader}>
@@ -219,7 +287,20 @@ export default function HealthServicesScreen() {
 
           {activePanel === 'pharmacy' && (
             <View>
-              <Text style={styles.sectionTitle}>Nearby Pharmacies ({pharmacies.length})</Text>
+              <Text style={styles.sectionTitle}>Nearby Pharmacies ({pharmacyDiscovery.length})</Text>
+              {pharmacyDiscovery.map((pharmacy) => (
+                <View key={pharmacy.id} style={styles.itemCard}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>{pharmacy.name}</Text>
+                    <Text style={styles.itemBadge}>{pharmacy.stock_level || 0} in stock</Text>
+                  </View>
+                  <Text style={styles.itemMeta}>{pharmacy.location}{pharmacy.phone_number ? ` | ${pharmacy.phone_number}` : ''}</Text>
+                  <Text style={styles.itemMeta}>
+                    {pharmacy.medicine_count} medicines{pharmacy.operating_hours ? ` | ${pharmacy.operating_hours}` : ''}
+                  </Text>
+                </View>
+              ))}
+              <Text style={styles.sectionTitle}>Available Medicines ({medicines.length})</Text>
               {medicines.slice(0, 8).map((medicine) => (
                 <View key={medicine.id} style={styles.itemCard}>
                   <View style={styles.itemHeader}>
@@ -228,7 +309,7 @@ export default function HealthServicesScreen() {
                   </View>
                   <Text style={styles.itemMeta}>{medicine.pharmacy_name} | Stock {medicine.quantity}</Text>
                   <TouchableOpacity style={styles.secondaryButton} onPress={() => orderMedicine(medicine)} disabled={busyAction === `medicine-${medicine.id}`}>
-                    {busyAction === `medicine-${medicine.id}` ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Request Delivery</Text>}
+                    {busyAction === `medicine-${medicine.id}` ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Request Delivery</Text>}
                   </TouchableOpacity>
                 </View>
               ))}
@@ -245,18 +326,46 @@ export default function HealthServicesScreen() {
                   </View>
                   <Text style={styles.itemMeta}>{doctor.specialization} | UGX {Number(doctor.consultation_fee || 0).toLocaleString()}</Text>
                   <TouchableOpacity style={styles.secondaryButton} onPress={() => bookDoctor(doctor)} disabled={!doctor.available || busyAction === `doctor-${doctor.id}`}>
-                    {busyAction === `doctor-${doctor.id}` ? <ActivityIndicator color="#2e7d32" /> : <Text style={styles.secondaryButtonText}>Book QR Ticket</Text>}
+                    {busyAction === `doctor-${doctor.id}` ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Book QR Ticket</Text>}
                   </TouchableOpacity>
                 </View>
               ))}
               <Text style={styles.sectionTitle}>My Tickets ({bookings.length})</Text>
-              {bookings.slice(0, 3).map((booking) => (
+              {bookings.slice(0, 5).map((booking) => (
                 <View key={booking.id} style={styles.ticketCard}>
-                  <Ionicons name="qr-code-outline" size={30} color="#2e7d32" />
+                  <Ionicons name="qr-code-outline" size={30} color="#2563EB" />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.itemTitle}>{booking.booking_type}</Text>
                     <Text style={styles.itemMeta}>{booking.status} | Ticket HBH-{booking.id}</Text>
                   </View>
+                  {booking.status === 'pending' && (
+                    <TouchableOpacity
+                      style={styles.cancelTicketButton}
+                      onPress={() => cancelBooking(booking)}
+                      disabled={busyAction === `cancel-${booking.id}`}
+                    >
+                      {busyAction === `cancel-${booking.id}` ? (
+                        <ActivityIndicator color="#c62828" />
+                      ) : (
+                        <Text style={styles.cancelTicketText}>Cancel</Text>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+              <Text style={styles.sectionTitle}>My Prescriptions ({prescriptions.length})</Text>
+              {prescriptions.slice(0, 3).map((prescription) => (
+                <View key={prescription.id} style={styles.itemCard}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>Prescription #{prescription.id}</Text>
+                    <Text style={styles.itemBadge}>RX</Text>
+                  </View>
+                  <Text style={styles.itemMeta}>
+                    {Array.isArray(prescription.medicines) && prescription.medicines.length
+                      ? prescription.medicines.map((m: any) => m.name || m).join(', ')
+                      : 'No medicine list attached'}
+                  </Text>
+                  <Text style={styles.itemMeta}>{prescription.notes || ''}</Text>
                 </View>
               ))}
             </View>
@@ -274,6 +383,22 @@ export default function HealthServicesScreen() {
                 {busyAction === 'ambulance' ? <ActivityIndicator color="#fff" /> : <Ionicons name="call-outline" size={19} color="#fff" />}
                 <Text style={styles.sosButtonText}>Request Ambulance SOS</Text>
               </TouchableOpacity>
+              <Text style={styles.sectionTitle}>Active Dispatches ({dispatches.length})</Text>
+              {dispatches.map((dispatch) => (
+                <View key={dispatch.id} style={styles.itemCard}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>{dispatch.status}</Text>
+                    <Text style={styles.itemBadge}>#{dispatch.id}</Text>
+                  </View>
+                  <Text style={styles.itemMeta}>{dispatch.location}</Text>
+                  {dispatch.estimated_arrival && (
+                    <Text style={styles.itemMeta}>ETA {new Date(dispatch.estimated_arrival).toLocaleString()}</Text>
+                  )}
+                </View>
+              ))}
+              {dispatches.length === 0 && (
+                <Text style={styles.emptyText}>No ambulance dispatches on record.</Text>
+              )}
             </View>
           )}
         </ScrollView>
@@ -283,47 +408,57 @@ export default function HealthServicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#e8f5e9' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   headerCopy: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '800', color: '#1b5e20' },
-  subtitle: { fontSize: 13, fontWeight: '600', color: '#4c8c4a', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800', color: '#1E293B' },
+  subtitle: { fontSize: 13, fontWeight: '600', color: '#64748B', marginTop: 2 },
   panelTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 14 },
   panelTab: { flex: 1, minHeight: 42, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 3 },
-  panelTabActive: { backgroundColor: '#2e7d32' },
-  panelTabText: { color: '#2e7d32', fontSize: 11, fontWeight: '800' },
+  panelTabActive: { backgroundColor: '#2563EB' },
+  panelTabText: { color: '#2563EB', fontSize: 11, fontWeight: '800' },
   panelTabTextActive: { color: '#fff', fontSize: 11, fontWeight: '800' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#2e7d32', marginTop: 8, fontWeight: '700' },
+  loadingText: { color: '#2563EB', marginTop: 8, fontWeight: '700' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 36 },
   severityBand: { borderRadius: 8, padding: 16, marginBottom: 14 },
-  severity_low: { backgroundColor: '#2e7d32' },
+  severity_low: { backgroundColor: '#2563EB' },
   severity_medium: { backgroundColor: '#b26a00' },
   severity_high: { backgroundColor: '#c62828' },
   severity_emergency: { backgroundColor: '#7b1b1b' },
   severityLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
   severityValue: { color: '#fff', fontSize: 24, fontWeight: '800', marginTop: 3 },
+  severityRisk: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700', marginTop: 4 },
+  formRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  summaryPanel: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235,0.18)' },
+  summaryText: { color: '#1E293B', fontSize: 13, fontWeight: '700', flex: 1 },
+  providerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  providerChip: { backgroundColor: '#F8FAFC', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  providerChipText: { color: '#2563EB', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  cancelTicketButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: '#ffebee' },
+  cancelTicketText: { color: '#c62828', fontSize: 11, fontWeight: '800' },
+  emptyText: { color: '#64748B', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },
   symptomGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  symptomChip: { backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(46,125,50,0.14)' },
-  symptomChipActive: { backgroundColor: '#2e7d32' },
-  symptomText: { color: '#2e7d32', fontSize: 13, fontWeight: '800', textTransform: 'capitalize' },
+  symptomChip: { backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235,0.14)' },
+  symptomChipActive: { backgroundColor: '#2563EB' },
+  symptomText: { color: '#2563EB', fontSize: 13, fontWeight: '800', textTransform: 'capitalize' },
   symptomTextActive: { color: '#fff', fontSize: 13, fontWeight: '800', textTransform: 'capitalize' },
-  primaryButton: { minHeight: 46, backgroundColor: '#2e7d32', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 14 },
+  primaryButton: { minHeight: 46, backgroundColor: '#2563EB', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 14 },
   primaryButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  sectionTitle: { color: '#1b5e20', fontSize: 16, fontWeight: '800', marginBottom: 10, marginTop: 4 },
-  itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(46,125,50,0.12)' },
+  sectionTitle: { color: '#1E293B', fontSize: 16, fontWeight: '800', marginBottom: 10, marginTop: 4 },
+  itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(37, 99, 235,0.12)' },
   itemHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 6 },
-  itemTitle: { color: '#1b5e20', fontSize: 15, fontWeight: '800', flex: 1, textTransform: 'capitalize' },
-  itemBadge: { color: '#2e7d32', backgroundColor: '#e8f5e9', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
-  itemMeta: { color: '#4c8c4a', fontSize: 12, lineHeight: 17 },
-  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  secondaryButtonText: { color: '#2e7d32', fontSize: 13, fontWeight: '800' },
+  itemTitle: { color: '#1E293B', fontSize: 15, fontWeight: '800', flex: 1, textTransform: 'capitalize' },
+  itemBadge: { color: '#2563EB', backgroundColor: '#F8FAFC', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
+  itemMeta: { color: '#64748B', fontSize: 12, lineHeight: 17 },
+  secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  secondaryButtonText: { color: '#2563EB', fontSize: 13, fontWeight: '800' },
   ticketCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 8, padding: 14, marginBottom: 10 },
   sosPanel: { backgroundColor: '#c62828', borderRadius: 8, padding: 18, alignItems: 'center', marginBottom: 14 },
   sosTitle: { color: '#fff', fontSize: 20, fontWeight: '800', marginTop: 8 },
   sosText: { color: 'rgba(255,255,255,0.86)', textAlign: 'center', fontSize: 13, lineHeight: 18, marginTop: 4 },
-  input: { minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1b5e20', fontWeight: '700', marginBottom: 12 },
+  input: { minHeight: 46, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, color: '#1E293B', fontWeight: '700', marginBottom: 12 },
   sosButton: { minHeight: 50, borderRadius: 8, backgroundColor: '#c62828', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
   sosButtonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

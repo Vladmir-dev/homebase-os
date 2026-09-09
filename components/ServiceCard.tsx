@@ -44,7 +44,7 @@ export default function ServiceCard({
       <Text style={styles.title} numberOfLines={2}>{title}</Text>
 
       <View style={styles.ratingRow}>
-        <Ionicons name="star" size={13} color="#f4b400" />
+        <Ionicons name="star" size={13} color="#F59E0B" />
         <Text style={styles.ratingText}>{rating}</Text>
       </View>
 
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#0e2b12',
+    shadowColor: '#1E293B',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.13,
     shadowRadius: 18,
@@ -79,13 +79,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 10,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F8FAFC',
   },
 
   image: {
     width: '100%',
     height: 138,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#F8FAFC',
   },
 
   discountTag: {
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14.5,
     fontWeight: '600',
-    color: '#1a3b1c',
+    color: '#1E293B',
     lineHeight: 19,
     marginBottom: 6,
   },
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
 
   ratingText: {
     fontSize: 13,
-    color: '#4a7c4c',
+    color: '#64748B',
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1a5c1d',
+    color: '#1E293B',
     marginTop: 6,
   },
 
   subtitle: {
     fontSize: 12.5,
-    color: '#6b9e6d',
+    color: '#94A3B8',
     fontWeight: '500',
     marginTop: 6,
     
