@@ -7,6 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "truubos",
     "userInterfaceStyle": "automatic",
+    "updates": {
+      "url": "https://u.expo.dev/3a66b90e-84a7-48b8-9241-3541145e2745"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.homebase.homebaseos",

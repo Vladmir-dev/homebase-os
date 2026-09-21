@@ -21,6 +21,7 @@
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-symbols": "~1.0.8",
+    "expo-updates": "~29.0.20",
     "expo-web-browser": "~15.0.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -47,7 +48,9 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "test:ci": "jest --ci --coverage=false",
-    "build:local-apk": "rm -rf ~/eas-build-cache && mkdir -p ~/eas-build-cache && EAS_LOCAL_BUILD_WORKINGDIR=~/eas-build-cache npx eas-cli@21.7.0 build --platform android --profile preview --local"
+    "build:ios": "npx eas-cli@21.7.0 build --platform ios --profile production",
+    "build:all": "npx eas-cli@21.7.0 build --platform all --profile production",
+    "build:local-apk": "export JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home}\" && export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"$ANDROID_HOME\" && export PATH=\"$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/36.0.0:$PATH\" && rm -rf ~/eas-build-cache && mkdir -p ~/eas-build-cache && EAS_LOCAL_BUILD_WORKINGDIR=~/eas-build-cache npx eas-cli@21.7.0 build --platform android --profile preview --local"
   },
   "jest": {
     "preset": "jest-expo",
