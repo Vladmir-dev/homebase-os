@@ -20,6 +20,9 @@
       "autoIncrement": true,
       "node": "22.13.0",
       "channel": "production",
+      "env": {
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+      },
       "android": {
         "buildType": "apk"
       }
