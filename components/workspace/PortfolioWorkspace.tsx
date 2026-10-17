@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -51,6 +52,61 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
   const [maintTitle, setMaintTitle] = useState("");
   const [maintDesc, setMaintDesc] = useState("");
   const [submittingMaint, setSubmittingMaint] = useState(false);
+
+  // Rental chat state
+  const [chatTarget, setChatTarget] = useState<{
+    kind: "lease" | "maintenance";
+    id: number | string;
+    title: string;
+  } | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatText, setChatText] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+
+  const loadChatMessages = async (target: typeof chatTarget) => {
+    if (!target) return;
+    setChatLoading(true);
+    try {
+      const data =
+        target.kind === "lease"
+          ? await api.getLeaseMessages(target.id)
+          : await api.getMaintenanceMessages(target.id);
+      setChatMessages(Array.isArray(data) ? data : data.results || []);
+    } catch (err: any) {
+      console.warn("Failed loading chat:", err?.message);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const openChat = (
+    kind: "lease" | "maintenance",
+    id: number | string,
+    title: string,
+  ) => {
+    const target = { kind, id, title };
+    setChatTarget(target);
+    setChatText("");
+    loadChatMessages(target);
+  };
+
+  const handleSendChat = async () => {
+    if (!chatTarget || !chatText.trim()) return;
+    setChatSending(true);
+    try {
+      const data =
+        chatTarget.kind === "lease"
+          ? await api.sendLeaseMessage(chatTarget.id, chatText.trim())
+          : await api.sendMaintenanceMessage(chatTarget.id, chatText.trim());
+      setChatMessages(Array.isArray(data) ? data : data.results || []);
+      setChatText("");
+    } catch (err: any) {
+      Alert.alert("Message Failed", err?.message || "Could not send message.");
+    } finally {
+      setChatSending(false);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -313,6 +369,99 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
     }
   };
 
+  const renderChatModal = () => (
+    <Modal
+      visible={!!chatTarget}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setChatTarget(null)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.chatCard}>
+          <View style={styles.chatHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.modalTitle} numberOfLines={1}>
+                {chatTarget?.title || "Messages"}
+              </Text>
+              <Text style={styles.chatSubtitle}>
+                {chatTarget?.kind === "maintenance"
+                  ? "Maintenance thread"
+                  : "Lease thread"}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => setChatTarget(null)}>
+              <Ionicons name="close" size={24} color="#1E293B" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={styles.chatScroll}
+            contentContainerStyle={{ paddingVertical: 8 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {chatLoading ? (
+              <ActivityIndicator color="#2563EB" style={{ marginTop: 20 }} />
+            ) : chatMessages.length === 0 ? (
+              <Text style={styles.chatEmpty}>
+                No messages yet. Start the conversation.
+              </Text>
+            ) : (
+              chatMessages.map((m: any) => {
+                const mine =
+                  !!userProfile?.email &&
+                  m.sender_email === userProfile.email;
+                return (
+                  <View
+                    key={m.id}
+                    style={[
+                      styles.chatBubble,
+                      mine ? styles.chatBubbleMine : styles.chatBubbleTheirs,
+                    ]}
+                  >
+                    {!mine && (
+                      <Text style={styles.chatSender}>
+                        {m.sender_name || m.sender_email || "User"}
+                      </Text>
+                    )}
+                    <Text
+                      style={
+                        mine ? styles.chatTextMine : styles.chatTextTheirs
+                      }
+                    >
+                      {m.body}
+                    </Text>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+
+          <View style={styles.chatInputRow}>
+            <TextInput
+              style={styles.chatInput}
+              value={chatText}
+              onChangeText={setChatText}
+              placeholder="Type a message..."
+              placeholderTextColor="#94A3B8"
+              multiline
+            />
+            <TouchableOpacity
+              style={styles.chatSend}
+              onPress={handleSendChat}
+              disabled={chatSending || !chatText.trim()}
+            >
+              {chatSending ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons name="send" size={18} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -558,6 +707,21 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                   </Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={styles.secondaryGlassButtonLong}
+                  onPress={() =>
+                    openChat(
+                      "lease",
+                      lease.id,
+                      `Message ${lease.tenant_name || lease.tenant_email || "Tenant"}`,
+                    )
+                  }
+                >
+                  <Text style={styles.secondaryGlassButtonLongText}>
+                    💬 Message Tenant
+                  </Text>
+                </TouchableOpacity>
+
                 {lease.status === "draft" ||
                 lease.status === "pending_signature" ? (
                   <TouchableOpacity
@@ -630,6 +794,13 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
               </Text>
             </View>
             <Text style={styles.maintDesc}>{maint.description}</Text>
+            <TouchableOpacity
+              style={styles.maintChatButton}
+              onPress={() => openChat("maintenance", maint.id, maint.title)}
+            >
+              <Ionicons name="chatbubbles-outline" size={15} color="#2563EB" />
+              <Text style={styles.maintChatText}>Open Chat</Text>
+            </TouchableOpacity>
           </View>
         ))}
 
@@ -786,6 +957,8 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
             </View>
           </View>
         </Modal>
+
+        {renderChatModal()}
       </View>
     );
   }
@@ -847,6 +1020,25 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                   {currentLease.end_date || "TBD"}
                 </Text>
 
+                {currentLease.landlord_name ? (
+                  <View style={styles.landlordBox}>
+                    <Text style={styles.landlordLabel}>LANDLORD</Text>
+                    <Text style={styles.landlordName}>
+                      {currentLease.landlord_name}
+                    </Text>
+                    {currentLease.landlord_phone ? (
+                      <Text style={styles.metaText}>
+                        {currentLease.landlord_phone}
+                      </Text>
+                    ) : null}
+                    {currentLease.landlord_nin ? (
+                      <Text style={styles.metaText}>
+                        NIN: {currentLease.landlord_nin}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
+
                 <View style={styles.healthBarContainer}>
                   <View
                     style={[
@@ -886,6 +1078,23 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
                       🛠️ Log Maintenance Request
                     </Text>
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.secondaryGlassButtonLong}
+                    onPress={() =>
+                      openChat(
+                        "lease",
+                        currentLease.id,
+                        `Message ${
+                          currentLease.landlord_name || "Landlord"
+                        }`,
+                      )
+                    }
+                  >
+                    <Text style={styles.secondaryGlassButtonLongText}>
+                      💬 Message Landlord
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             );
@@ -913,6 +1122,13 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
               </Text>
             </View>
             <Text style={styles.maintDesc}>{maint.description}</Text>
+            <TouchableOpacity
+              style={styles.maintChatButton}
+              onPress={() => openChat("maintenance", maint.id, maint.title)}
+            >
+              <Ionicons name="chatbubbles-outline" size={15} color="#2563EB" />
+              <Text style={styles.maintChatText}>Open Chat</Text>
+            </TouchableOpacity>
           </View>
         ))}
 
@@ -1048,6 +1264,8 @@ export default function PortfolioWorkspace({ role, assetId }: WorkspaceProps) {
             </View>
           </View>
         </Modal>
+
+        {renderChatModal()}
       </View>
     );
   }
@@ -1402,4 +1620,86 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563EB",
   },
   modalSubmitText: { color: "#fff", fontWeight: "700" },
+
+  landlordBox: {
+    backgroundColor: "#f0f4f1",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  landlordLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  landlordName: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
+
+  maintChatButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+    alignSelf: "flex-start",
+  },
+  maintChatText: { color: "#2563EB", fontSize: 12, fontWeight: "800" },
+
+  chatCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  chatSubtitle: { fontSize: 12, color: "#64748B", marginTop: 2 },
+  chatScroll: { maxHeight: 360 },
+  chatEmpty: {
+    color: "#94A3B8",
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 24,
+  },
+  chatBubble: {
+    maxWidth: "82%",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  chatBubbleMine: { backgroundColor: "#2563EB", alignSelf: "flex-end" },
+  chatBubbleTheirs: { backgroundColor: "#f0f4f1", alignSelf: "flex-start" },
+  chatSender: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#64748B",
+    marginBottom: 3,
+  },
+  chatTextMine: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  chatTextTheirs: { color: "#1E293B", fontSize: 14, fontWeight: "600" },
+  chatInputRow: { flexDirection: "row", gap: 8, marginTop: 12 },
+  chatInput: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 110,
+    backgroundColor: "#f0f4f1",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#1E293B",
+    fontWeight: "600",
+  },
+  chatSend: {
+    width: 48,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#2563EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

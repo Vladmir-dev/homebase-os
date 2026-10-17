@@ -22,6 +22,7 @@ export interface Asset {
   scopes: string[]; // RBAC array (e.g., ['read:ledger', 'write:milestone'])
   balance: number;
   location?: string;
+  description?: string;
 }
 
 export interface UserProfile {

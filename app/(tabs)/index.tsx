@@ -165,7 +165,19 @@ export default function HomeScreen() {
         )}
 
         {activeAsset?.type === 'RENTAL' && (
-          <PortfolioWorkspace role={activeAsset.role} assetId={activeAsset.id} />
+          <>
+            <PortfolioWorkspace role={activeAsset.role} assetId={activeAsset.id} />
+            <View style={styles.sectionContainer}>
+              <TouchableOpacity
+                style={styles.commandButton}
+                onPress={() => router.push('/rental-listings' as any)}
+              >
+                <Ionicons name="search-outline" size={18} color="#1E293B" />
+                <Text style={styles.commandButtonText}>Browse Rental Listings</Text>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
         {activeAsset?.type === 'CONSTRUCTION' && (
@@ -180,7 +192,7 @@ export default function HomeScreen() {
               style={styles.commandButton}
               onPress={() => router.push({
                 pathname: '/property/[assetId]/history',
-                params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
               })}
             >
               <Ionicons name="time-outline" size={18} color="#1E293B" />
@@ -191,7 +203,7 @@ export default function HomeScreen() {
               style={styles.commandButton}
               onPress={() => router.push({
                 pathname: '/property/[assetId]/documents',
-                params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
               })}
             >
               <Ionicons name="folder-outline" size={18} color="#1E293B" />
@@ -203,7 +215,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/boq',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="calculator-outline" size={18} color="#1E293B" />
@@ -216,7 +228,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/milestones',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="flag-outline" size={18} color="#1E293B" />
@@ -229,7 +241,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/reconciliation',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="git-compare-outline" size={18} color="#1E293B" />
@@ -242,7 +254,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/timeline',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="git-branch-outline" size={18} color="#1E293B" />
@@ -255,7 +267,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/procurement',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="bag-handle-outline" size={18} color="#1E293B" />
@@ -268,7 +280,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/site-management',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="clipboard-outline" size={18} color="#1E293B" />
@@ -281,7 +293,7 @@ export default function HomeScreen() {
                 style={styles.commandButton}
                 onPress={() => router.push({
                   pathname: '/property/[assetId]/construction-dashboard',
-                  params: { assetId: activeAsset.backendId, assetName: activeAsset.name },
+                  params: { assetId: activeAsset.backendId!, assetName: activeAsset.name },
                 })}
               >
                 <Ionicons name="grid-outline" size={18} color="#1E293B" />

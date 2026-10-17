@@ -165,12 +165,20 @@ export default function ResidentCommandScreen() {
 
     setSavingAction(true);
     try {
-      await api.createGroceryOrder({
+      const order = await api.createGroceryOrder({
         items,
         mode: 'kadogo',
         delivery_address: activeAsset?.location || 'Homebase household',
+        asset: activeAsset?.backendId,
       });
-      Alert.alert('Order Sent', 'Kadogo grocery order has been submitted.');
+      const orderNumber = order?.order_number;
+      Alert.alert(
+        'Order Sent',
+        orderNumber
+          ? `Kadogo grocery order submitted.\n\nOrder No: ${orderNumber}`
+          : 'Kadogo grocery order has been submitted.',
+      );
+      loadData();
     } catch (error: any) {
       Alert.alert('Order Failed', error.message || 'Could not send grocery order.');
     } finally {
@@ -341,18 +349,36 @@ export default function ResidentCommandScreen() {
                     </Text>
                     <Text style={styles.itemBadge}>{order.status}</Text>
                   </View>
+                  {order.order_number ? (
+                    <Text style={styles.orderNumber}>Order No: {order.order_number}</Text>
+                  ) : null}
                   <Text style={styles.itemMeta}>
                     {order.mode} | {order.created_at ? new Date(order.created_at).toLocaleDateString() : ''}
                   </Text>
-                  {order.status === 'pending' && (
-                    <TouchableOpacity
-                      style={styles.secondaryButton}
-                      onPress={() => cancelGroceryOrder(order)}
-                      disabled={savingAction}
-                    >
-                      {savingAction ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Cancel Order</Text>}
-                    </TouchableOpacity>
-                  )}
+                  <View style={styles.cardActions}>
+                    {order.order_number ? (
+                      <TouchableOpacity
+                        style={[styles.secondaryButton, styles.cardAction]}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/order-tracking',
+                            params: { order_number: order.order_number },
+                          })
+                        }
+                      >
+                        <Text style={styles.secondaryButtonText}>Track Order</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                    {order.status === 'pending' && (
+                      <TouchableOpacity
+                        style={[styles.secondaryButton, styles.cardAction]}
+                        onPress={() => cancelGroceryOrder(order)}
+                        disabled={savingAction}
+                      >
+                        {savingAction ? <ActivityIndicator color="#2563EB" /> : <Text style={styles.secondaryButtonText}>Cancel Order</Text>}
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               ))}
               {groceryOrders.length === 0 && (
@@ -427,6 +453,9 @@ const styles = StyleSheet.create({
   itemTitle: { color: '#1E293B', fontSize: 15, fontWeight: '800', flex: 1 },
   itemBadge: { color: '#2563EB', backgroundColor: '#F8FAFC', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, fontWeight: '800', textTransform: 'capitalize' },
   itemMeta: { color: '#64748B', fontSize: 12, lineHeight: 17 },
+  orderNumber: { color: '#0D9488', fontSize: 12, fontWeight: '800', marginBottom: 2, letterSpacing: 0.3 },
+  cardActions: { flexDirection: 'row', gap: 10 },
+  cardAction: { flex: 1 },
   secondaryButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   secondaryButtonText: { color: '#2563EB', fontSize: 13, fontWeight: '800' },
   emptyText: { color: '#64748B', fontSize: 13, fontWeight: '600', textAlign: 'center', marginVertical: 10 },

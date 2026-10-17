@@ -13,6 +13,15 @@ import {
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 
+type AccountMenuItem = {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  badge?: string;
+  value?: string;
+  route?: string;
+  action?: () => void;
+};
+
 export default function AccountScreen() {
   const { logout, userProfile, assets } = useApp();
   const router = useRouter();
@@ -31,7 +40,7 @@ export default function AccountScreen() {
     fetchUnread();
   }, []);
 
-  const ACCOUNT_MENU = [
+  const ACCOUNT_MENU: AccountMenuItem[] = [
     {
       icon: "business-outline" as const,
       label: "My Registered Assets",
@@ -74,7 +83,11 @@ export default function AccountScreen() {
       route: "/evidence-audit",
     },
     { icon: "settings-outline" as const, label: "Settings" },
-    { icon: "help-circle-outline" as const, label: "Help & Support" },
+    {
+      icon: "help-circle-outline" as const,
+      label: "Help & Support",
+      route: "/help-support",
+    },
   ];
 
   return (
@@ -353,6 +366,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 14,
   },
+  assetSummaryText: { fontSize: 13, color: "#64748B", lineHeight: 19 },
   createAssetButton: {
     backgroundColor: "#2563EB",
     borderRadius: 14,

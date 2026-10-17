@@ -417,6 +417,8 @@ class ApiClient {
     items: Array<{ name: string; quantity: number; price: number }>;
     mode?: "kadogo" | "bulk" | "pantry";
     delivery_address?: string;
+    total_amount?: number;
+    asset?: number;
   }) {
     return this.request("/grocery-orders/", {
       method: "POST",
@@ -432,6 +434,104 @@ class ApiClient {
     return this.request(`/grocery-orders/${orderId}/cancel/`, {
       method: "POST",
     });
+  }
+
+  // ── Orders & tracking ─────────────────────────────────────────
+  async getOrders(params?: { pillar?: string; status?: string; q?: string }) {
+    const query = new URLSearchParams();
+    if (params?.pillar) query.set("pillar", params.pillar);
+    if (params?.status) query.set("status", params.status);
+    if (params?.q) query.set("q", params.q);
+    const qs = query.toString();
+    return this.request(`/orders/${qs ? `?${qs}` : ""}`);
+  }
+
+  async getOrderByNumber(orderNumber: string) {
+    return this.request(
+      `/orders/by-number/${encodeURIComponent(orderNumber)}/`,
+    );
+  }
+
+  async trackOrder(orderNumber: string) {
+    return this.request(
+      `/orders/track/?order_number=${encodeURIComponent(orderNumber)}`,
+    );
+  }
+
+  async getOrderAnalytics(pillar?: string) {
+    return this.request(`/orders/analytics/${pillar ? `?pillar=${pillar}` : ""}`);
+  }
+
+  async addOrderNote(orderId: number | string, message: string, status?: string) {
+    return this.request(`/orders/${orderId}/add-note/`, {
+      method: "POST",
+      body: JSON.stringify({ message, ...(status ? { status } : {}) }),
+    });
+  }
+
+  // ── Support & feedback ────────────────────────────────────────
+  async getFeedback(params?: {
+    category?: string;
+    status?: string;
+    order_number?: string;
+    q?: string;
+  }) {
+    const query = new URLSearchParams();
+    if (params?.category) query.set("category", params.category);
+    if (params?.status) query.set("status", params.status);
+    if (params?.order_number) query.set("order_number", params.order_number);
+    if (params?.q) query.set("q", params.q);
+    const qs = query.toString();
+    return this.request(`/feedback/${qs ? `?${qs}` : ""}`);
+  }
+
+  async getFeedbackThread(feedbackId: number | string) {
+    return this.request(`/feedback/${feedbackId}/`);
+  }
+
+  async createFeedback(payload: {
+    category: string;
+    subject: string;
+    message: string;
+    rating?: number;
+    asset?: number;
+    reference_type?: string;
+    reference_id?: string;
+    order_number?: string;
+  }) {
+    return this.request("/feedback/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async replyToFeedback(feedbackId: number | string, body: string) {
+    return this.request(`/feedback/${feedbackId}/reply/`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    });
+  }
+
+  async resolveFeedback(feedbackId: number | string) {
+    return this.request(`/feedback/${feedbackId}/resolve/`, {
+      method: "POST",
+    });
+  }
+
+  async closeFeedback(feedbackId: number | string) {
+    return this.request(`/feedback/${feedbackId}/close/`, {
+      method: "POST",
+    });
+  }
+
+  async reopenFeedback(feedbackId: number | string) {
+    return this.request(`/feedback/${feedbackId}/reopen/`, {
+      method: "POST",
+    });
+  }
+
+  async getFeedbackSummary() {
+    return this.request("/feedback/summary/");
   }
 
   async getDomesticStaff() {
@@ -607,6 +707,55 @@ class ApiClient {
 
   async getMaintenanceEmergency() {
     return this.request("/maintenance/emergency/");
+  }
+
+  // ── Rental listings (catalog) ─────────────────────────────────
+  async getRentalListings(params?: {
+    status?: string;
+    min_rent?: number;
+    max_rent?: number;
+    location?: string;
+    q?: string;
+  }) {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.min_rent != null) query.set("min_rent", String(params.min_rent));
+    if (params?.max_rent != null) query.set("max_rent", String(params.max_rent));
+    if (params?.location) query.set("location", params.location);
+    if (params?.q) query.set("q", params.q);
+    const qs = query.toString();
+    return this.request(`/rental-listings/${qs ? `?${qs}` : ""}`);
+  }
+
+  async getMyRentalListings() {
+    return this.request("/rental-listings/mine/");
+  }
+
+  async getRentalListing(id: number | string) {
+    return this.request(`/rental-listings/${id}/`);
+  }
+
+  // ── Rental chat (tenant/landlord & maintenance) ───────────────
+  async getLeaseMessages(leaseId: number | string) {
+    return this.request(`/leases/${leaseId}/messages/`);
+  }
+
+  async sendLeaseMessage(leaseId: number | string, body: string) {
+    return this.request(`/leases/${leaseId}/messages/`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    });
+  }
+
+  async getMaintenanceMessages(maintenanceId: number | string) {
+    return this.request(`/maintenance/${maintenanceId}/messages/`);
+  }
+
+  async sendMaintenanceMessage(maintenanceId: number | string, body: string) {
+    return this.request(`/maintenance/${maintenanceId}/messages/`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -931,6 +1080,7 @@ class ApiClient {
     description?: string;
     asset_id?: number;
     transaction_type?: string;
+    metadata?: Record<string, any>;
   }) {
     return this.request("/payments/initialize/", {
       method: "POST",
